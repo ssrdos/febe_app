@@ -1,5 +1,5 @@
 import { db } from './firebase-config.js';
-import { ref, set, get, onValue, push } from 'https://www.gstatic.com/firebasejs/9.x.x/firebase-database.js';
+import { ref, set, get, onValue, push } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
 
 export const saveStudent = async (student) => {
     try {

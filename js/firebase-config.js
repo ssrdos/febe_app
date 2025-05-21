@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js';
-import { getDatabase } from 'https://www.gstatic.com/firebasejs/9.x.x/firebase-database.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+import { getDatabase } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -17,5 +17,13 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
+// Add connection test
+const testConnection = () => {
+    console.log('Testing Firebase connection...');
+    return db ? 'Firebase initialized successfully' : 'Firebase initialization failed';
+};
+
+console.log(testConnection());
 
 export { db };
