@@ -6,6 +6,8 @@
     <title>Lista de Alumnos - Escuela de Padel Febe Ruiz</title>
     <link rel="icon" type="image/png" href="media/tenis.ico">
     <link rel="stylesheet" href="css/styles.css">
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
 </head>
 <body>
     <div class="list-container">
@@ -27,12 +29,40 @@
         <button type="button" class="btn-volver" onclick="window.location.href='menu.html'">VOLVER AL MENÚ</button>
     </div>
 
-    <script>
-        window.onload = function() {
+    <script type="module">
+        import { db } from './js/firebase-config.js';
+        import { ref, get, remove, set } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+
+        window.onload = async function() {
             const studentsList = document.getElementById('studentsList');
             const searchInput = document.getElementById('searchInput');
             const studentDetail = document.getElementById('studentDetail');
-            let students = JSON.parse(localStorage.getItem('students') || '[]');
+            let students = [];
+
+            // Get students from Firebase
+            async function loadStudents() {
+                try {
+                    const studentsRef = ref(db, 'students');
+                    const snapshot = await get(studentsRef);
+                    if (snapshot.exists()) {
+                        students = [];
+                        snapshot.forEach((childSnapshot) => {
+                            students.push({
+                                id: childSnapshot.key,
+                                ...childSnapshot.val()
+                            });
+                        });
+                    }
+                    return students;
+                } catch (error) {
+                    console.error('Error loading students:', error);
+                    return [];
+                }
+            }
+
+            // Initialize students
+            students = await loadStudents();
+            renderTable(students);
 
             function renderTable(studentsToShow) {
                 if (studentsToShow.length === 0) {
@@ -164,7 +194,7 @@
                 detailContent.innerHTML = editHtml;
             };
 
-            window.saveChanges = function(index) {
+            window.saveChanges = async function(index) {
                 const student = {
                     nombre: document.getElementById('edit-nombre').value,
                     apellido: document.getElementById('edit-apellido').value,
@@ -176,29 +206,38 @@
                     metodoPago: document.getElementById('edit-metodoPago').value
                 };
 
-                students[index] = student;
-                localStorage.setItem('students', JSON.stringify(students));
-                viewStudent(index);
-                renderTable(students);
-                alert('Cambios guardados correctamente');
+                try {
+                    const currentStudent = students[index];
+                    await set(ref(db, `students/${currentStudent.id}`), student);
+                    students = await loadStudents();
+                    viewStudent(index);
+                    renderTable(students);
+                    alert('Cambios guardados correctamente');
+                } catch (error) {
+                    console.error('Error saving changes:', error);
+                    alert('Error al guardar los cambios');
+                }
             };
 
             window.cancelEdit = function(index) {
                 viewStudent(index);
             };
 
-            window.deleteStudent = function(index) {
+            window.deleteStudent = async function(index) {
                 if (confirm('¿Está seguro que desea eliminar este alumno?')) {
-                    students.splice(index, 1);
-                    localStorage.setItem('students', JSON.stringify(students));
-                    closeDetail();
-                    renderTable(students);
-                    alert('Alumno eliminado correctamente');
+                    const student = students[index];
+                    try {
+                        await remove(ref(db, `students/${student.id}`));
+                        students = await loadStudents();
+                        closeDetail();
+                        renderTable(students);
+                        alert('Alumno eliminado correctamente');
+                    } catch (error) {
+                        console.error('Error deleting student:', error);
+                        alert('Error al eliminar el alumno');
+                    }
                 }
             };
-
-            // Initial render
-            renderTable(students);
 
             // Search handler
             searchInput.addEventListener('input', (e) => {
@@ -208,6 +247,6 @@
             });
         }
     </script>
-    <script src="js/theme.js"></script>
+    <script type="module" src="js/theme.js"></script>
 </body>
 </html>
