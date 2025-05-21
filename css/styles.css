@@ -690,6 +690,46 @@ input[type="month"]::-webkit-calendar-picker-indicator {
     transition: all 0.2s ease;
     min-height: 32px;
     width: auto;
+    margin: 2px;
+}
+
+.btn-delete {
+    background-color: #7b0c17;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+    min-height: 32px;
+    width: auto;
+    margin: 2px;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+    transform: translateY(-1px);
+}
+
+/* Mobile adjustments */
+@media screen and (max-width: 768px) {
+    .btn-view,
+    .btn-delete {
+        padding: 6px 12px;
+        font-size: 11px;
+        min-height: 28px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .btn-view,
+    .btn-delete {
+        padding: 4px 10px;
+        font-size: 10px;
+        min-height: 24px;
+    }
 }
 
 .btn-edit,
