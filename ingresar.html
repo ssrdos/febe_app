@@ -6,6 +6,8 @@
     <title>Ingreso de Alumno - Escuela de Padel Febe Ruiz</title>
     <link rel="icon" type="image/png" href="media/tenis.ico">
     <link rel="stylesheet" href="css/styles.css">
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-database-compat.js"></script>
 </head>
 <body>
     <div class="form-container">
@@ -121,8 +123,9 @@
             <button type="button" class="btn-volver" onclick="window.location.href='menu.html'">VOLVER</button>
         </form>
     </div>
-    <script type="module" src="js/script-alumno.js"></script>
     <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/firebase-service.js"></script>
+    <script type="module" src="js/script-alumno.js"></script>
     <script src="js/theme.js"></script>
 </body>
 </html>
