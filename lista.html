@@ -39,33 +39,9 @@
             const studentDetail = document.getElementById('studentDetail');
             let students = [];
 
-            // Get students from Firebase
-            async function loadStudents() {
-                try {
-                    const studentsRef = ref(db, 'students');
-                    const snapshot = await get(studentsRef);
-                    if (snapshot.exists()) {
-                        students = [];
-                        snapshot.forEach((childSnapshot) => {
-                            students.push({
-                                id: childSnapshot.key,
-                                ...childSnapshot.val()
-                            });
-                        });
-                    }
-                    return students;
-                } catch (error) {
-                    console.error('Error loading students:', error);
-                    return [];
-                }
-            }
-
-            // Initialize students
-            students = await loadStudents();
-            renderTable(students);
-
-            function renderTable(studentsToShow) {
-                if (studentsToShow.length === 0) {
+            // Function to render the table
+            function renderTable(students) {
+                if (students.length === 0) {
                     studentsList.innerHTML = '<p class="no-students">No hay alumnos registrados</p>';
                     return;
                 }
@@ -75,16 +51,20 @@
                     <tr>
                         <th>Nombre</th>
                         <th>Apellido</th>
-                        <th>Acción</th>
+                        <th>Método de Pago</th>
+                        <th>Acciones</th>
                     </tr>`;
 
-                studentsToShow.forEach((student, index) => {
+                students.forEach((student, index) => {
                     html += `
                         <tr>
                             <td>${student.nombre}</td>
                             <td>${student.apellido}</td>
+                            <td>${student.metodoPago.toUpperCase()}</td>
                             <td>
                                 <button onclick="viewStudent(${index})" class="btn-view">VER</button>
+                                <button onclick="editStudent(${index})" class="btn-edit">EDITAR</button>
+                                <button onclick="deleteStudent(${index})" class="btn-delete">ELIMINAR</button>
                             </td>
                         </tr>`;
                 });
@@ -93,15 +73,50 @@
                 studentsList.innerHTML = html;
             }
 
-            function filterStudents(searchTerm) {
-                return students.filter(student => {
-                    const fullName = `${student.nombre} ${student.apellido}`.toLowerCase();
-                    const reverseName = `${student.apellido} ${student.nombre}`.toLowerCase();
-                    searchTerm = searchTerm.toLowerCase();
-                    return fullName.includes(searchTerm) || reverseName.includes(searchTerm);
-                });
+            // Function to load students from Firebase
+            async function loadStudents() {
+                try {
+                    const studentsRef = ref(db, 'students');
+                    const snapshot = await get(studentsRef);
+                    console.log('Firebase snapshot:', snapshot.val()); // Debug log
+
+                    if (snapshot.exists()) {
+                        students = [];
+                        snapshot.forEach((childSnapshot) => {
+                            students.push({
+                                id: childSnapshot.key,
+                                ...childSnapshot.val()
+                            });
+                        });
+                        console.log('Loaded students:', students); // Debug log
+                    }
+                    return students;
+                } catch (error) {
+                    console.error('Error loading students:', error);
+                    return [];
+                }
             }
 
+            // Initialize and render students
+            try {
+                students = await loadStudents();
+                renderTable(students);
+            } catch (error) {
+                console.error('Error initializing students:', error);
+                studentsList.innerHTML = '<p class="error">Error al cargar los alumnos</p>';
+            }
+
+            // Search functionality
+            searchInput.addEventListener('input', () => {
+                const searchTerm = searchInput.value.toLowerCase();
+                const filteredStudents = students.filter(student => {
+                    const fullName = `${student.nombre} ${student.apellido}`.toLowerCase();
+                    return fullName.includes(searchTerm);
+                });
+                renderTable(filteredStudents);
+            });
+
+            // Make functions available globally
             window.viewStudent = function(index) {
                 const student = students[index];
                 studentsList.style.display = 'none';
@@ -238,15 +253,9 @@
                     }
                 }
             };
-
-            // Search handler
-            searchInput.addEventListener('input', (e) => {
-                const searchTerm = e.target.value;
-                const filteredStudents = filterStudents(searchTerm);
-                renderTable(filteredStudents);
-            });
         }
     </script>
     <script type="module" src="js/theme.js"></script>
 </body>
 </html>
+``` 
