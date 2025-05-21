@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alumnos No Abonados - Escuela de Padel Febe Ruiz</title>
+    <link rel="icon" type="image/png" href="media/tenis.ico">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="list-container">
+        <h1 class="form-title">ALUMNOS NO ABONADOS</h1>
+        
+        <div class="filter-container">
+            <div class="filter-group">
+                <label class="filter-label">Buscar alumno:</label>
+                <input type="text" 
+                       id="searchInput" 
+                       class="form-input search-input" 
+                       placeholder="Buscar por nombre o apellido...">
+            </div>
+        </div>
+
+        <div id="unpaidStudentsList" class="students-list">
+            <!-- Lista de alumnos se generará aquí -->
+        </div>
+        
+        <button type="button" class="btn-volver" onclick="window.location.href='menu.html'">VOLVER</button>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const unpaidStudentsList = document.getElementById('unpaidStudentsList');
+            const searchInput = document.getElementById('searchInput');
+            
+            function getFilteredStudents() {
+                let students = JSON.parse(localStorage.getItem('students') || '[]');
+                
+                // Filtrar solo alumnos que no han pagado
+                students = students.filter(student => 
+                    student.metodoPago === 'no_abonado'
+                );
+
+                // Aplicar búsqueda por nombre/apellido
+                const searchTerm = searchInput.value.toLowerCase();
+                if (searchTerm) {
+                    students = students.filter(student => {
+                        const fullName = `${student.nombre} ${student.apellido}`.toLowerCase();
+                        const reverseName = `${student.apellido} ${student.nombre}`.toLowerCase();
+                        return fullName.includes(searchTerm) || reverseName.includes(searchTerm);
+                    });
+                }
+
+                return students;
+            }
+
+            function renderTable() {
+                const students = getFilteredStudents();
+
+                if (students.length === 0) {
+                    unpaidStudentsList.innerHTML = '<p class="no-students">No hay alumnos no abonados</p>';
+                    return;
+                }
+
+                let html = '<table class="students-table">';
+                html += `
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Días</th>
+                        <th>Turnos</th>
+                        <th>Mes/Año</th>
+                        <th>Cuota Pendiente</th>
+                    </tr>`;
+
+                students.forEach(student => {
+                    html += `
+                        <tr>
+                            <td>${student.nombre}</td>
+                            <td>${student.apellido}</td>
+                            <td>${student.dias.join(', ')}</td>
+                            <td>${student.turnos.join(', ')}</td>
+                            <td>${student.mesAnio}</td>
+                            <td>$${student.cuota}</td>
+                        </tr>`;
+                });
+
+                html += '</table>';
+                unpaidStudentsList.innerHTML = html;
+            }
+
+            // Event listener para búsqueda
+            searchInput.addEventListener('input', renderTable);
+
+            // Renderizado inicial
+            renderTable();
+        }
+    </script>
+    <script src="js/theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Alumnos - Escuela de Padel Febe Ruiz</title>
+    <link rel="icon" type="image/png" href="media/tenis.ico">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="list-container">
+        <h1 class="form-title">LISTA DE ALUMNOS</h1>
+        <div class="filter-container">
+            <input type="text" 
+                   id="searchInput" 
+                   class="form-input search-input" 
+                   placeholder="Buscar por nombre o apellido...">
+        </div>
+        <div class="students-list" id="studentsList">
+            <!-- Lista de alumnos se generará aquí -->
+        </div>
+        <div id="studentDetail" class="student-detail" style="display: none;">
+            <h2 class="detail-title">DETALLES DEL ALUMNO</h2>
+            <div class="detail-content"></div>
+            <button type="button" class="btn-volver" onclick="closeDetail()">VOLVER</button>
+        </div>
+        <button type="button" class="btn-volver" onclick="window.location.href='menu.html'">VOLVER AL MENÚ</button>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const studentsList = document.getElementById('studentsList');
+            const searchInput = document.getElementById('searchInput');
+            const studentDetail = document.getElementById('studentDetail');
+            let students = JSON.parse(localStorage.getItem('students') || '[]');
+
+            function renderTable(studentsToShow) {
+                if (studentsToShow.length === 0) {
+                    studentsList.innerHTML = '<p class="no-students">No hay alumnos registrados</p>';
+                    return;
+                }
+
+                let html = '<table class="students-table">';
+                html += `
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Acción</th>
+                    </tr>`;
+
+                studentsToShow.forEach((student, index) => {
+                    html += `
+                        <tr>
+                            <td>${student.nombre}</td>
+                            <td>${student.apellido}</td>
+                            <td>
+                                <button onclick="viewStudent(${index})" class="btn-view">VER</button>
+                            </td>
+                        </tr>`;
+                });
+
+                html += '</table>';
+                studentsList.innerHTML = html;
+            }
+
+            function filterStudents(searchTerm) {
+                return students.filter(student => {
+                    const fullName = `${student.nombre} ${student.apellido}`.toLowerCase();
+                    const reverseName = `${student.apellido} ${student.nombre}`.toLowerCase();
+                    searchTerm = searchTerm.toLowerCase();
+                    return fullName.includes(searchTerm) || reverseName.includes(searchTerm);
+                });
+            }
+
+            window.viewStudent = function(index) {
+                const student = students[index];
+                studentsList.style.display = 'none';
+                studentDetail.style.display = 'block';
+                
+                const detailHtml = `
+                    <div class="detail-item">
+                        <strong>Nombre:</strong> ${student.nombre}
+                    </div>
+                    <div class="detail-item">
+                        <strong>Apellido:</strong> ${student.apellido}
+                    </div>
+                    <div class="detail-item">
+                        <strong>Días:</strong> ${student.dias.join(', ')}
+                    </div>
+                    <div class="detail-item">
+                        <strong>Turnos:</strong> ${student.turnos.join(', ')}
+                    </div>
+                    <div class="detail-item">
+                        <strong>Horarios:</strong> ${student.horarios.join(', ')}
+                    </div>
+                    <div class="detail-item">
+                        <strong>Cuota:</strong> $${student.cuota}
+                    </div>
+                    <div class="detail-item">
+                        <strong>Mes/Año:</strong> ${student.mesAnio}
+                    </div>
+                    <div class="detail-item">
+                        <strong>Método de Pago:</strong> ${student.metodoPago}
+                    </div>
+                    <div class="detail-actions">
+                        <button onclick="editStudent(${index})" class="btn-edit">Editar</button>
+                        <button onclick="deleteStudent(${index})" class="btn-delete">Eliminar</button>
+                    </div>`;
+                
+                document.querySelector('.detail-content').innerHTML = detailHtml;
+            };
+
+            window.closeDetail = function() {
+                studentDetail.style.display = 'none';
+                studentsList.style.display = 'block';
+            };
+
+            window.editStudent = function(index) {
+                const student = students[index];
+                const detailContent = document.querySelector('.detail-content');
+                
+                const editHtml = `
+                    <div class="detail-item">
+                        <strong>Nombre:</strong>
+                        <input type="text" class="detail-edit-input" value="${student.nombre}" id="edit-nombre">
+                    </div>
+                    <div class="detail-item">
+                        <strong>Apellido:</strong>
+                        <input type="text" class="detail-edit-input" value="${student.apellido}" id="edit-apellido">
+                    </div>
+                    <div class="detail-item">
+                        <strong>Días:</strong>
+                        <input type="text" class="detail-edit-input" value="${student.dias.join(', ')}" id="edit-dias">
+                    </div>
+                    <div class="detail-item">
+                        <strong>Turnos:</strong>
+                        <input type="text" class="detail-edit-input" value="${student.turnos.join(', ')}" id="edit-turnos">
+                    </div>
+                    <div class="detail-item">
+                        <strong>Horarios:</strong>
+                        <input type="text" class="detail-edit-input" value="${student.horarios.join(', ')}" id="edit-horarios">
+                    </div>
+                    <div class="detail-item">
+                        <strong>Cuota:</strong>
+                        <input type="number" class="detail-edit-input" value="${student.cuota}" id="edit-cuota">
+                    </div>
+                    <div class="detail-item">
+                        <strong>Mes/Año:</strong>
+                        <input type="month" class="detail-edit-input" value="${student.mesAnio}" id="edit-mesAnio">
+                    </div>
+                    <div class="detail-item">
+                        <strong>Método de Pago:</strong>
+                        <select class="detail-edit-input" id="edit-metodoPago">
+                            <option value="efectivo" ${student.metodoPago === 'efectivo' ? 'selected' : ''}>EFECTIVO</option>
+                            <option value="transferencia" ${student.metodoPago === 'transferencia' ? 'selected' : ''}>TRANSFERENCIA</option>
+                            <option value="ambas" ${student.metodoPago === 'ambas' ? 'selected' : ''}>AMBAS</option>
+                        </select>
+                    </div>
+                    <div class="detail-actions">
+                        <button onclick="saveChanges(${index})" class="btn-save">Guardar</button>
+                        <button onclick="cancelEdit(${index})" class="btn-volver">Cancelar</button>
+                    </div>`;
+                
+                detailContent.innerHTML = editHtml;
+            };
+
+            window.saveChanges = function(index) {
+                const student = {
+                    nombre: document.getElementById('edit-nombre').value,
+                    apellido: document.getElementById('edit-apellido').value,
+                    dias: document.getElementById('edit-dias').value.split(',').map(d => d.trim()),
+                    turnos: document.getElementById('edit-turnos').value.split(',').map(t => t.trim()),
+                    horarios: document.getElementById('edit-horarios').value.split(',').map(h => h.trim()),
+                    cuota: document.getElementById('edit-cuota').value,
+                    mesAnio: document.getElementById('edit-mesAnio').value,
+                    metodoPago: document.getElementById('edit-metodoPago').value
+                };
+
+                students[index] = student;
+                localStorage.setItem('students', JSON.stringify(students));
+                viewStudent(index);
+                renderTable(students);
+                alert('Cambios guardados correctamente');
+            };
+
+            window.cancelEdit = function(index) {
+                viewStudent(index);
+            };
+
+            window.deleteStudent = function(index) {
+                if (confirm('¿Está seguro que desea eliminar este alumno?')) {
+                    students.splice(index, 1);
+                    localStorage.setItem('students', JSON.stringify(students));
+                    closeDetail();
+                    renderTable(students);
+                    alert('Alumno eliminado correctamente');
+                }
+            };
+
+            // Initial render
+            renderTable(students);
+
+            // Search handler
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value;
+                const filteredStudents = filterStudents(searchTerm);
+                renderTable(filteredStudents);
+            });
+        }
+    </script>
+    <script src="js/theme.js"></script>
+</body>
+</html>

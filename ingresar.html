@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingreso de Alumno - Escuela de Padel Febe Ruiz</title>
+    <link rel="icon" type="image/png" href="media/tenis.ico">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="form-container">
+        <h1 class="form-title">INGRESO DE ALUMNO</h1>
+        <form class="student-form" id="studentForm">
+            <input type="text" class="form-input" placeholder="NOMBRE">
+            <input type="text" class="form-input" placeholder="APELLIDO">
+            <div class="days-group">
+                <label class="days-label">DÍAS:</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="dias" value="lunes"> LUNES
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="dias" value="martes"> MARTES
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="dias" value="miercoles"> MIÉRCOLES
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="dias" value="jueves"> JUEVES
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="dias" value="viernes"> VIERNES
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="dias" value="sabado"> SÁBADO
+                    </label>
+                </div>
+            </div>
+            <div class="turno-group">
+                <label class="turno-label">TURNOS:</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="turnos" value="mañana"> MAÑANA
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="turnos" value="siesta"> SIESTA
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="turnos" value="tarde"> TARDE
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="turnos" value="noche"> NOCHE
+                    </label>
+                </div>
+            </div>
+            <div class="horario-group">
+                <label class="horario-label">HORARIOS:</label>
+                <div class="checkbox-group horario-grid">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="horarios" value="08:00"> 08:00
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="horarios" value="09:00"> 09:00
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="horarios" value="10:00"> 10:00
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="horarios" value="11:00"> 11:00
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="horarios" value="12:00"> 12:00
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="horarios" value="13:00"> 13:00
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="horarios" value="14:00"> 14:00
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="horarios" value="15:00"> 15:00
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="horarios" value="16:00"> 16:00
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="horarios" value="17:00"> 17:00
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="horarios" value="18:00"> 18:00
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="horarios" value="19:00"> 19:00
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="horarios" value="20:00"> 20:00
+                    </label>
+                </div>
+            </div>
+            <input type="number" 
+                   class="form-input" 
+                   placeholder="CUOTA" 
+                   min="0" 
+                   step="100"
+                   name="cuota"
+                   id="cuota">
+            <input type="month" 
+                   class="form-input" 
+                   placeholder="MES / AÑO"
+                   name="mesAnio"
+                   id="mesAnio"
+                   required>
+            <select class="form-input" name="metodoPago" id="metodoPago" required>
+                <option value="" disabled selected>METODO DE PAGO</option>
+                <option value="efectivo">EFECTIVO</option>
+                <option value="transferencia">TRANSFERENCIA</option>
+                <option value="ambas">AMBAS</option>
+                <option value="no_abonado">NO ABONADO</option>
+            </select>
+            <button type="submit" class="btn-guardar">GUARDAR</button>
+            <button type="button" class="btn-volver" onclick="window.location.href='menu.html'">VOLVER</button>
+        </form>
+    </div>
+    <script src="js/script-alumno.js"></script>
+    <script src="js/theme.js"></script>
+</body>
+</html>

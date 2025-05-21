@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horarios - Escuela de Padel Febe Ruiz</title>
+    <link rel="icon" type="image/png" href="media/tenis.ico">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="list-container">
+        <h1 class="form-title">HORARIOS</h1>
+        
+        <div class="filter-container">
+            <div class="filter-group">
+                <label class="filter-label">Filtrar por día:</label>
+                <select id="dayFilter" class="form-input">
+                    <option value="">Todos los días</option>
+                    <option value="lunes">Lunes</option>
+                    <option value="martes">Martes</option>
+                    <option value="miercoles">Miércoles</option>
+                    <option value="jueves">Jueves</option>
+                    <option value="viernes">Viernes</option>
+                    <option value="sabado">Sábado</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Filtrar por turno:</label>
+                <select id="turnFilter" class="form-input">
+                    <option value="">Todos los turnos</option>
+                    <option value="mañana">Mañana</option>
+                    <option value="siesta">Siesta</option>
+                    <option value="tarde">Tarde</option>
+                    <option value="noche">Noche</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="scheduleList" class="schedule-container"></div>
+        
+        <button type="button" class="btn-volver" onclick="window.location.href='menu.html'">VOLVER</button>
+    </div>
+    <script src="js/script-horarios.js"></script>
+    <script src="js/theme.js"></script>
+</body>
+</html>
