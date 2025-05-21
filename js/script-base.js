@@ -12,3 +12,14 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     }
 });
 
+// filepath: c:\Users\ssrdo\Documents\app_febe\js\script-base.js
+// Replace localStorage with Firebase
+function saveStudents(students) {
+    db.ref('students').set(students);
+}
+
+function getStudents() {
+    return db.ref('students').once('value')
+        .then(snapshot => snapshot.val() || []);
+}
+
