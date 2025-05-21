@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/styles.css">
     <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    <script src="js/theme.js"></script>
 </head>
 <body>
     <div class="list-container">
@@ -47,6 +48,14 @@
         </div>
         
         <button type="button" class="btn-volver" onclick="window.location.href='menu.html'">VOLVER</button>
+    </div>
+
+    <div id="paymentHistoryModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Historial de Pagos</h2>
+            <div id="paymentHistoryContent"></div>
+            <button class="btn-close" onclick="closePaymentHistory()">Cerrar</button>
+        </div>
     </div>
 
     <script type="module">
@@ -125,9 +134,19 @@
                         <th>Método de Pago</th>
                         <th>Cuota</th>
                         <th>Mes/Año</th>
+                        <th>Fecha de Pago</th>
                     </tr>`;
 
                 students.forEach(student => {
+                    const fechaPago = student.fechaPago ? 
+                        new Date(student.fechaPago).toLocaleDateString('es-AR', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) : '';
+
                     html += `
                         <tr>
                             <td>${student.nombre}</td>
@@ -135,6 +154,7 @@
                             <td>${student.metodoPago.toUpperCase()}</td>
                             <td>$${student.cuota}</td>
                             <td>${student.mesAnio}</td>
+                            <td>${fechaPago}</td>
                         </tr>`;
                 });
 
@@ -150,7 +170,61 @@
             // Renderizado inicial
             await renderTable();
         }
+
+        // Make viewPaymentHistory available globally
+        window.viewPaymentHistory = async function(studentId) {
+            try {
+                const historyRef = ref(db, `payments/${studentId}`);
+                const snapshot = await get(historyRef);
+                const modal = document.getElementById('paymentHistoryModal');
+                const content = document.getElementById('paymentHistoryContent');
+                
+                let html = '<table class="payment-history-table">';
+                html += `
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Monto</th>
+                        <th>Método</th>
+                        <th>Mes Abonado</th>
+                    </tr>`;
+
+                if (snapshot.exists()) {
+                    snapshot.forEach((childSnapshot) => {
+                        const payment = childSnapshot.val();
+                        html += `
+                            <tr>
+                                <td>${new Date(payment.fechaPago).toLocaleDateString()}</td>
+                                <td>$${payment.cuota}</td>
+                                <td>${payment.metodoPago.toUpperCase()}</td>
+                                <td>${payment.mesAnio}</td>
+                            </tr>`;
+                    });
+                } else {
+                    html += '<tr><td colspan="4">No hay historial de pagos</td></tr>';
+                }
+
+                html += '</table>';
+                content.innerHTML = html;
+                modal.style.display = 'block';
+            } catch (error) {
+                console.error('Error loading payment history:', error);
+                alert('Error al cargar el historial de pagos');
+            }
+        };
+
+        // Make closePaymentHistory available globally
+        window.closePaymentHistory = function() {
+            document.getElementById('paymentHistoryModal').style.display = 'none';
+        };
     </script>
     <script src="js/theme.js"></script>
+
+    <div id="paymentHistoryModal" class="modal">
+        <div class="modal-content">
+            <h2>Historial de Pagos</h2>
+            <div id="paymentHistoryContent"></div>
+            <button class="btn-volver" onclick="closePaymentHistory()">Cerrar</button>
+        </div>
+    </div>
 </body>
 </html>

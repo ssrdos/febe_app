@@ -5,7 +5,11 @@ export const saveStudent = async (student) => {
     try {
         const studentsRef = ref(db, 'students');
         const newStudentRef = push(studentsRef);
-        await set(newStudentRef, student);
+        await set(newStudentRef, {
+            ...student,
+            fechaPago: new Date().toISOString(),
+            timestamp: Date.now()
+        });
         console.log('Data saved successfully');
         return true;
     } catch (error) {
@@ -44,4 +48,22 @@ export const testConnection = () => {
             console.log('Not connected to Firebase');
         }
     });
+};
+
+export const savePaymentHistory = async (studentId, paymentData) => {
+    try {
+        const historyRef = ref(db, `payments/${studentId}`);
+        const newPaymentRef = push(historyRef);
+        await set(newPaymentRef, {
+            fecha: paymentData.fecha,
+            monto: paymentData.monto,
+            metodoPago: paymentData.metodoPago,
+            mesAbonado: paymentData.mesAbonado,
+            timestamp: Date.now()
+        });
+        return true;
+    } catch (error) {
+        console.error('Error saving payment history:', error);
+        return false;
+    }
 };

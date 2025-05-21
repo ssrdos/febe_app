@@ -8,15 +8,34 @@
     <link rel="stylesheet" href="css/styles.css">
     <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    <script src="js/theme.js"></script>
 </head>
 <body>
     <div class="list-container">
         <h1 class="form-title">LISTA DE ALUMNOS</h1>
         <div class="filter-container">
+            <!-- Add payment status filter -->
+            <div class="filter-group">
+                <label class="filter-label">Estado de pago:</label>
+                <select id="paymentStatusFilter" class="form-input">
+                    <option value="">Todos</option>
+                    <option value="abonado">Abonados</option>
+                    <option value="no_abonado">No Abonados</option>
+                </select>
+            </div>
+            
+            <!-- Existing search input -->
             <input type="text" 
                    id="searchInput" 
                    class="form-input search-input" 
                    placeholder="Buscar por nombre o apellido...">
+            
+            <!-- Existing delete all button -->
+            <button type="button" 
+                    class="btn-delete-all" 
+                    onclick="deleteAllStudents()">
+                ELIMINAR TODOS
+            </button>
         </div>
         <div class="students-list" id="studentsList">
             <!-- Lista de alumnos se generará aquí -->
@@ -36,6 +55,7 @@
         window.onload = async function() {
             const studentsList = document.getElementById('studentsList');
             const searchInput = document.getElementById('searchInput');
+            const paymentStatusFilter = document.getElementById('paymentStatusFilter');
             const studentDetail = document.getElementById('studentDetail');
             let students = [];
 
@@ -47,13 +67,7 @@
                 }
 
                 let html = '<table class="students-table">';
-                html += `
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
-                        <th>Método de Pago</th>
-                        <th>Acciones</th>
-                    </tr>`;
+
 
                 students.forEach((student, index) => {
                     html += `
@@ -96,24 +110,49 @@
                 }
             }
 
+            // Function to filter students
+            function filterStudents() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const paymentStatus = paymentStatusFilter.value;
+                
+                let filteredStudents = students;
+
+                // Filter by payment status
+                if (paymentStatus) {
+                    filteredStudents = filteredStudents.filter(student => {
+                        if (paymentStatus === 'abonado') {
+                            return student.metodoPago !== 'no_abonado';
+                        } else {
+                            return student.metodoPago === 'no_abonado';
+                        }
+                    });
+                }
+
+                // Filter by search term
+                if (searchTerm) {
+                    filteredStudents = filteredStudents.filter(student => {
+                        const fullName = `${student.nombre} ${student.apellido}`.toLowerCase();
+                        return fullName.includes(searchTerm);
+                    });
+                }
+
+                renderTable(filteredStudents);
+            }
+
             // Initialize and render students
             try {
                 students = await loadStudents();
-                renderTable(students);
+                filterStudents(); // Use filterStudents instead of renderTable
             } catch (error) {
                 console.error('Error initializing students:', error);
                 studentsList.innerHTML = '<p class="error">Error al cargar los alumnos</p>';
             }
 
             // Search functionality
-            searchInput.addEventListener('input', () => {
-                const searchTerm = searchInput.value.toLowerCase();
-                const filteredStudents = students.filter(student => {
-                    const fullName = `${student.nombre} ${student.apellido}`.toLowerCase();
-                    return fullName.includes(searchTerm);
-                });
-                renderTable(filteredStudents);
-            });
+            searchInput.addEventListener('input', filterStudents);
+
+            // Filter by payment status
+            paymentStatusFilter.addEventListener('change', filterStudents);
 
             // Make functions available globally
             window.viewStudent = function(index) {
@@ -249,6 +288,20 @@
                     } catch (error) {
                         console.error('Error deleting student:', error);
                         alert('Error al eliminar el alumno');
+                    }
+                }
+            };
+
+            window.deleteAllStudents = async function() {
+                if (confirm('¿Está seguro que desea eliminar todos los alumnos?')) {
+                    try {
+                        await remove(ref(db, 'students'));
+                        students = [];
+                        renderTable(students);
+                        alert('Todos los alumnos han sido eliminados correctamente');
+                    } catch (error) {
+                        console.error('Error deleting all students:', error);
+                        alert('Error al eliminar todos los alumnos');
                     }
                 }
             };
