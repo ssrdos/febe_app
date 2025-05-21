@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/styles.css">
     <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <script src="js/theme.js"></script>
 </head>
 <body>
@@ -35,6 +36,11 @@
                     class="btn-delete-all" 
                     onclick="deleteAllStudents()">
                 ELIMINAR TODOS
+            </button>
+            <button type="button" 
+                    class="btn-export" 
+                    onclick="exportToExcel()">
+                EXPORTAR A EXCEL
             </button>
         </div>
         <div class="students-list" id="studentsList">
@@ -303,6 +309,45 @@
                         console.error('Error deleting all students:', error);
                         alert('Error al eliminar todos los alumnos');
                     }
+                }
+            };
+
+            window.exportToExcel = function() {
+                try {
+                    // Create worksheet data
+                    const wsData = [
+                        ['Nombre', 'Apellido', 'Días', 'Turnos', 'Horarios', 'Cuota', 'Mes/Año', 'Método de Pago']
+                    ];
+
+                    students.forEach(student => {
+                        wsData.push([
+                            student.nombre,
+                            student.apellido,
+                            Array.isArray(student.dias) ? student.dias.join(', ') : student.dias,
+                            Array.isArray(student.turnos) ? student.turnos.join(', ') : student.turnos,
+                            Array.isArray(student.horarios) ? student.horarios.join(', ') : student.horarios,
+                            student.cuota,
+                            student.mesAnio,
+                            student.metodoPago
+                        ]);
+                    });
+
+                    // Create workbook
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+                    // Add worksheet to workbook
+                    XLSX.utils.book_append_sheet(wb, ws, 'Alumnos');
+
+                    // Generate filename with current date
+                    const date = new Date().toISOString().split('T')[0];
+                    const fileName = `alumnos_${date}.xlsx`;
+
+                    // Save file
+                    XLSX.writeFile(wb, fileName);
+                } catch (error) {
+                    console.error('Error exporting to Excel:', error);
+                    alert('Error al exportar a Excel');
                 }
             };
         }
