@@ -679,7 +679,7 @@ input[type="month"]::-webkit-calendar-picker-indicator {
 
 /* Action Buttons */
 .btn-view {
-    background-color: var(--accent-primary);
+    background-color: #0f5d23;
     color: white;
     padding: 8px 16px;
     border: none;

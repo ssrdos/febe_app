@@ -6,6 +6,8 @@
     <title>Alumnos No Abonados - Escuela de Padel Febe Ruiz</title>
     <link rel="icon" type="image/png" href="media/tenis.ico">
     <link rel="stylesheet" href="css/styles.css">
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
 </head>
 <body>
     <div class="list-container">
@@ -28,34 +30,52 @@
         <button type="button" class="btn-volver" onclick="window.location.href='menu.html'">VOLVER</button>
     </div>
 
-    <script>
-        window.onload = function() {
+    <script type="module">
+        import { db } from './js/firebase-config.js';
+        import { ref, get } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+
+        window.onload = async function() {
             const unpaidStudentsList = document.getElementById('unpaidStudentsList');
             const searchInput = document.getElementById('searchInput');
             
-            function getFilteredStudents() {
-                let students = JSON.parse(localStorage.getItem('students') || '[]');
-                
-                // Filtrar solo alumnos que no han pagado
-                students = students.filter(student => 
-                    student.metodoPago === 'no_abonado'
-                );
+            async function getFilteredStudents() {
+                try {
+                    const studentsRef = ref(db, 'students');
+                    const snapshot = await get(studentsRef);
+                    let students = [];
 
-                // Aplicar búsqueda por nombre/apellido
-                const searchTerm = searchInput.value.toLowerCase();
-                if (searchTerm) {
-                    students = students.filter(student => {
-                        const fullName = `${student.nombre} ${student.apellido}`.toLowerCase();
-                        const reverseName = `${student.apellido} ${student.nombre}`.toLowerCase();
-                        return fullName.includes(searchTerm) || reverseName.includes(searchTerm);
-                    });
+                    if (snapshot.exists()) {
+                        snapshot.forEach((childSnapshot) => {
+                            const student = {
+                                id: childSnapshot.key,
+                                ...childSnapshot.val()
+                            };
+                            if (student.metodoPago === 'no_abonado') {
+                                students.push(student);
+                            }
+                        });
+                    }
+
+                    // Aplicar búsqueda
+                    const searchTerm = searchInput.value.toLowerCase();
+                    if (searchTerm) {
+                        students = students.filter(student => {
+                            const fullName = `${student.nombre} ${student.apellido}`.toLowerCase();
+                            const reverseName = `${student.apellido} ${student.nombre}`.toLowerCase();
+                            return fullName.includes(searchTerm) || reverseName.includes(searchTerm);
+                        });
+                    }
+
+                    return students;
+                } catch (error) {
+                    console.error('Error getting students:', error);
+                    return [];
                 }
-
-                return students;
             }
 
-            function renderTable() {
-                const students = getFilteredStudents();
+            async function renderTable() {
+                const students = await getFilteredStudents();
+                console.log('Unpaid students:', students);
 
                 if (students.length === 0) {
                     unpaidStudentsList.innerHTML = '<p class="no-students">No hay alumnos no abonados</p>';
@@ -78,8 +98,8 @@
                         <tr>
                             <td>${student.nombre}</td>
                             <td>${student.apellido}</td>
-                            <td>${student.dias.join(', ')}</td>
-                            <td>${student.turnos.join(', ')}</td>
+                            <td>${Array.isArray(student.dias) ? student.dias.join(', ') : student.dias}</td>
+                            <td>${Array.isArray(student.turnos) ? student.turnos.join(', ') : student.turnos}</td>
                             <td>${student.mesAnio}</td>
                             <td>$${student.cuota}</td>
                         </tr>`;
@@ -89,11 +109,11 @@
                 unpaidStudentsList.innerHTML = html;
             }
 
-            // Event listener para búsqueda
+            // Event listener
             searchInput.addEventListener('input', renderTable);
 
-            // Renderizado inicial
-            renderTable();
+            // Initial render
+            await renderTable();
         }
     </script>
     <script src="js/theme.js"></script>

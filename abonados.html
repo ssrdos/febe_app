@@ -6,6 +6,8 @@
     <title>Alumnos Abonados - Escuela de Padel Febe Ruiz</title>
     <link rel="icon" type="image/png" href="media/tenis.ico">
     <link rel="stylesheet" href="css/styles.css">
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
 </head>
 <body>
     <div class="list-container">
@@ -47,50 +49,68 @@
         <button type="button" class="btn-volver" onclick="window.location.href='menu.html'">VOLVER</button>
     </div>
 
-    <script>
-        window.onload = function() {
+    <script type="module">
+        import { db } from './js/firebase-config.js';
+        import { ref, get } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+
+        window.onload = async function() {
             const paidStudentsList = document.getElementById('paidStudentsList');
             const paymentFilter = document.getElementById('paymentFilter');
             const monthFilter = document.getElementById('monthFilter');
             const searchInput = document.getElementById('searchInput');
             
-            function getFilteredStudents() {
-                let students = JSON.parse(localStorage.getItem('students') || '[]');
-                
-                // Filtrar solo alumnos que han pagado
-                students = students.filter(student => 
-                    student.metodoPago !== 'no_abonado'
-                );
+            async function getFilteredStudents() {
+                try {
+                    const studentsRef = ref(db, 'students');
+                    const snapshot = await get(studentsRef);
+                    let students = [];
 
-                // Aplicar filtro de método de pago
-                if (paymentFilter.value) {
-                    students = students.filter(student => 
-                        student.metodoPago === paymentFilter.value
-                    );
+                    if (snapshot.exists()) {
+                        snapshot.forEach((childSnapshot) => {
+                            const student = {
+                                id: childSnapshot.key,
+                                ...childSnapshot.val()
+                            };
+                            if (student.metodoPago !== 'no_abonado') {
+                                students.push(student);
+                            }
+                        });
+                    }
+
+                    // Aplicar filtro de método de pago
+                    if (paymentFilter.value) {
+                        students = students.filter(student => 
+                            student.metodoPago === paymentFilter.value
+                        );
+                    }
+
+                    // Aplicar filtro de mes
+                    if (monthFilter.value) {
+                        students = students.filter(student => 
+                            student.mesAnio === monthFilter.value
+                        );
+                    }
+
+                    // Aplicar búsqueda por nombre/apellido
+                    const searchTerm = searchInput.value.toLowerCase();
+                    if (searchTerm) {
+                        students = students.filter(student => {
+                            const fullName = `${student.nombre} ${student.apellido}`.toLowerCase();
+                            const reverseName = `${student.apellido} ${student.nombre}`.toLowerCase();
+                            return fullName.includes(searchTerm) || reverseName.includes(searchTerm);
+                        });
+                    }
+
+                    return students;
+                } catch (error) {
+                    console.error('Error getting students:', error);
+                    return [];
                 }
-
-                // Aplicar filtro de mes
-                if (monthFilter.value) {
-                    students = students.filter(student => 
-                        student.mesAnio === monthFilter.value
-                    );
-                }
-
-                // Aplicar búsqueda por nombre/apellido
-                const searchTerm = searchInput.value.toLowerCase();
-                if (searchTerm) {
-                    students = students.filter(student => {
-                        const fullName = `${student.nombre} ${student.apellido}`.toLowerCase();
-                        const reverseName = `${student.apellido} ${student.nombre}`.toLowerCase();
-                        return fullName.includes(searchTerm) || reverseName.includes(searchTerm);
-                    });
-                }
-
-                return students;
             }
 
-            function renderTable() {
-                const students = getFilteredStudents();
+            async function renderTable() {
+                const students = await getFilteredStudents();
+                console.log('Filtered students:', students);
 
                 if (students.length === 0) {
                     paidStudentsList.innerHTML = '<p class="no-students">No hay alumnos abonados</p>';
@@ -128,7 +148,7 @@
             searchInput.addEventListener('input', renderTable);
 
             // Renderizado inicial
-            renderTable();
+            await renderTable();
         }
     </script>
     <script src="js/theme.js"></script>

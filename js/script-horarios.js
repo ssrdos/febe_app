@@ -1,23 +1,45 @@
-document.addEventListener('DOMContentLoaded', function() {
+import { db } from './firebase-config.js';
+import { ref, get } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+
+document.addEventListener('DOMContentLoaded', async function() {
     const dayFilter = document.getElementById('dayFilter');
     const turnFilter = document.getElementById('turnFilter');
     const scheduleList = document.getElementById('scheduleList');
+    let students = [];
+
+    // Function to get students from Firebase
+    async function loadStudents() {
+        try {
+            const studentsRef = ref(db, 'students');
+            const snapshot = await get(studentsRef);
+            if (snapshot.exists()) {
+                students = [];
+                snapshot.forEach((childSnapshot) => {
+                    students.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+                console.log('Loaded students:', students);
+            }
+            return students;
+        } catch (error) {
+            console.error('Error loading students:', error);
+            return [];
+        }
+    }
     
+    // Function to render the schedule
     function renderSchedule() {
         const selectedDay = dayFilter.value;
         const selectedTurn = turnFilter.value;
         
-        // Obtener estudiantes del localStorage
-        const students = JSON.parse(localStorage.getItem('students') || '[]');
-        
-        // Filtrar estudiantes según los criterios seleccionados
         const filteredStudents = students.filter(student => {
             const matchDay = !selectedDay || student.dias.includes(selectedDay);
             const matchTurn = !selectedTurn || student.turnos.includes(selectedTurn);
             return matchDay && matchTurn;
         });
 
-        // Renderizar resultados
         if (filteredStudents.length === 0) {
             scheduleList.innerHTML = '<p class="no-students">No hay alumnos en este horario</p>';
             return;
@@ -38,9 +60,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 <tr>
                     <td>${student.nombre}</td>
                     <td>${student.apellido}</td>
-                    <td>${student.dias.join(', ')}</td>
-                    <td>${student.turnos.join(', ')}</td>
-                    <td>${student.horarios.join(', ')}</td>
+                    <td>${Array.isArray(student.dias) ? student.dias.join(', ') : student.dias}</td>
+                    <td>${Array.isArray(student.turnos) ? student.turnos.join(', ') : student.turnos}</td>
+                    <td>${Array.isArray(student.horarios) ? student.horarios.join(', ') : student.horarios}</td>
                 </tr>`;
         });
 
@@ -48,10 +70,16 @@ document.addEventListener('DOMContentLoaded', function() {
         scheduleList.innerHTML = html;
     }
 
-    // Eventos para los filtros
-    dayFilter.addEventListener('change', renderSchedule);
-    turnFilter.addEventListener('change', renderSchedule);
-
-    // Renderizar inicial
-    renderSchedule();
+    // Initialize data and render
+    try {
+        students = await loadStudents();
+        renderSchedule();
+        
+        // Add event listeners
+        dayFilter.addEventListener('change', renderSchedule);
+        turnFilter.addEventListener('change', renderSchedule);
+    } catch (error) {
+        console.error('Error initializing schedule:', error);
+        scheduleList.innerHTML = '<p class="error">Error al cargar los horarios</p>';
+    }
 });
