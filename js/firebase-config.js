@@ -17,20 +17,15 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
 
-// Add connection test
-const testConnection = () => {
-    console.log('Testing Firebase connection...');
-    return db ? 'Firebase initialized successfully' : 'Firebase initialization failed';
-};
+// Initialize App Check in debug mode for development
+self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
 
-console.log(testConnection());
-
-// Initialize App Check
 const appCheck = initializeAppCheck(app, {
-    provider: new ReCaptchaV3Provider('your-recaptcha-site-key'),
+    provider: new ReCaptchaV3Provider('YOUR_RECAPTCHA_SITE_KEY'),
     isTokenAutoRefreshEnabled: true
 });
+
+const db = getDatabase(app);
 
 export { db, appCheck };

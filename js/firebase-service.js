@@ -5,15 +5,21 @@ export const saveStudent = async (student) => {
     try {
         const studentsRef = ref(db, 'students');
         const newStudentRef = push(studentsRef);
+        
         await set(newStudentRef, {
             ...student,
-            fechaPago: new Date().toISOString(),
             timestamp: Date.now()
         });
+        
         console.log('Data saved successfully');
         return true;
     } catch (error) {
         console.error('Error saving data:', error);
+        if (error.code === 'PERMISSION_DENIED') {
+            alert('Error: No tienes permiso para guardar datos. Por favor, actualiza la página.');
+        } else {
+            alert('Error al guardar los datos. Por favor, intenta nuevamente.');
+        }
         return false;
     }
 };
