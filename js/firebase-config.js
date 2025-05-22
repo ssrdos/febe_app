@@ -1,7 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
 import { getDatabase } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
-import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check.js';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -17,15 +16,9 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// Initialize App Check in debug mode for development
-self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-
-const appCheck = initializeAppCheck(app, {
-    provider: new ReCaptchaV3Provider('YOUR_RECAPTCHA_SITE_KEY'),
-    isTokenAutoRefreshEnabled: true
-});
-
 const db = getDatabase(app);
 
-export { db, appCheck };
+// Remove App Check for now since it's causing issues
+// We'll implement proper authentication later
+
+export { db };
