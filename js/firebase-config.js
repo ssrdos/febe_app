@@ -1,17 +1,18 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
 import { getDatabase } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check.js';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: process.env.FIREBASE_API_KEY,
-    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    databaseURL: process.env.FIREBASE_DATABASE_URL,
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.FIREBASE_APP_ID,
-    measurementId: process.env.FIREBASE_MEASUREMENT_ID
+    apiKey: "AIzaSyAZHY6BEcypXZ_hBe2BlPY0VojrHKK0lLY",
+    authDomain: "febe-app-96c07.firebaseapp.com",
+    projectId: "febe-app-96c07",
+    databaseURL: "https://febe-app-96c07-default-rtdb.firebaseio.com",
+    storageBucket: "febe-app-96c07.firebasestorage.app",
+    messagingSenderId: "781571458601",
+    appId: "1:781571458601:web:007b9028cff5544d32be38",
+    measurementId: "G-FMJBC62H3P"
 };
 
 // Initialize Firebase
@@ -26,4 +27,10 @@ const testConnection = () => {
 
 console.log(testConnection());
 
-export { db };
+// Initialize App Check
+const appCheck = initializeAppCheck(app, {
+    provider: new ReCaptchaV3Provider('your-recaptcha-site-key'),
+    isTokenAutoRefreshEnabled: true
+});
+
+export { db, appCheck };
