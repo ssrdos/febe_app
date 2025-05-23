@@ -115,6 +115,7 @@ body {
 
 .form-group {
     text-align: left;
+    margin-bottom: 15px;
 }
 
 .form-group label {
@@ -124,6 +125,13 @@ body {
     font-weight: bold;
     font-size: 16px;
     text-transform: uppercase;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-primary);
+    font-weight: bold;
 }
 
 .form-control {
@@ -143,6 +151,22 @@ body {
     outline: none;
     box-shadow: 0 0 0 3px rgba(30, 76, 154, 0.1);
     transform: translateY(-1px);
+}
+
+input[type="datetime-local"].form-input {
+    font-family: inherit;
+    padding: 8px 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    width: 90%;
+    margin-bottom: 10px;
+}
+
+/* Dark mode support */
+[data-theme="dark"] input[type="datetime-local"].form-input {
+    color-scheme: dark;
 }
 
 .btn-ingresar {
@@ -1281,8 +1305,17 @@ input:valid {
     white-space: nowrap;
 }
 
+.students-table td:nth-child(4) {
+    white-space: nowrap;
+    font-size: 0.9em;
+}
+
 @media screen and (max-width: 768px) {
     .students-table td:nth-child(6) {
+        font-size: 0.8em;
+    }
+
+    .students-table td:nth-child(4) {
         font-size: 0.8em;
     }
 }
@@ -1291,6 +1324,14 @@ input:valid {
     .students-table td:nth-child(6) {
         font-size: 0.75em;
         width: auto;
+    }
+
+    .students-table td:nth-child(4) {
+        font-size: 0.75em;
+    }
+    
+    .students-table td {
+        padding: 6px 8px;
     }
 }
 

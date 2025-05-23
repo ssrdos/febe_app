@@ -107,12 +107,14 @@
                    step="100"
                    name="cuota"
                    id="cuota">
-            <input type="month" 
-                   class="form-input" 
-                   placeholder="MES / AÑO"
-                   name="mesAnio"
-                   id="mesAnio"
-                   required>
+            <div class="form-group">
+                <label class="form-label">FECHA Y HORA DE PAGO:</label>
+                <input type="datetime-local" 
+                       class="form-input" 
+                       name="fechaPago"
+                       id="fechaPago"
+                       required>
+            </div>
             <select class="form-input" name="metodoPago" id="metodoPago" required>
                 <option value="" disabled selected>METODO DE PAGO</option>
                 <option value="efectivo">EFECTIVO</option>

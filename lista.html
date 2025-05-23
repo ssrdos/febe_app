@@ -73,14 +73,32 @@
                 }
 
                 let html = '<table class="students-table">';
-
+                html += `
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Método de Pago</th>
+                        <th>Fecha de Pago</th>
+                        <th>Acciones</th>
+                    </tr>`;
 
                 students.forEach((student, index) => {
+                    // Format the payment date
+                    const fechaPago = student.fechaPago ? 
+                        new Date(student.fechaPago).toLocaleString('es-AR', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) : 'No registrado';
+
                     html += `
                         <tr>
                             <td>${student.nombre}</td>
                             <td>${student.apellido}</td>
                             <td>${student.metodoPago.toUpperCase()}</td>
+                            <td>${fechaPago}</td>
                             <td>
                                 <button onclick="viewStudent(${index})" class="btn-view">VER</button>
                                 <button onclick="deleteStudent(${index})" class="btn-delete">ELIMINAR</button>
@@ -234,8 +252,11 @@
                         <input type="number" class="detail-edit-input" value="${student.cuota}" id="edit-cuota">
                     </div>
                     <div class="detail-item">
-                        <strong>Mes/Año:</strong>
-                        <input type="month" class="detail-edit-input" value="${student.mesAnio}" id="edit-mesAnio">
+                        <strong>Fecha y Hora de Pago:</strong>
+                        <input type="datetime-local" 
+                               class="detail-edit-input" 
+                               value="${student.fechaPago ? student.fechaPago.slice(0, 16) : ''}" 
+                               id="edit-fechaPago">
                     </div>
                     <div class="detail-item">
                         <strong>Método de Pago:</strong>
@@ -243,6 +264,7 @@
                             <option value="efectivo" ${student.metodoPago === 'efectivo' ? 'selected' : ''}>EFECTIVO</option>
                             <option value="transferencia" ${student.metodoPago === 'transferencia' ? 'selected' : ''}>TRANSFERENCIA</option>
                             <option value="ambas" ${student.metodoPago === 'ambas' ? 'selected' : ''}>AMBAS</option>
+                            <option value="no_abonado" ${student.metodoPago === 'no_abonado' ? 'selected' : ''}>NO ABONADO</option>
                         </select>
                     </div>
                     <div class="detail-actions">
@@ -261,8 +283,10 @@
                     turnos: document.getElementById('edit-turnos').value.split(',').map(t => t.trim()),
                     horarios: document.getElementById('edit-horarios').value.split(',').map(h => h.trim()),
                     cuota: document.getElementById('edit-cuota').value,
-                    mesAnio: document.getElementById('edit-mesAnio').value,
-                    metodoPago: document.getElementById('edit-metodoPago').value
+                    fechaPago: document.getElementById('edit-fechaPago').value,
+                    mesAnio: new Date(document.getElementById('edit-fechaPago').value).toISOString().slice(0,7),
+                    metodoPago: document.getElementById('edit-metodoPago').value,
+                    timestamp: Date.now()
                 };
 
                 try {
