@@ -338,12 +338,22 @@
 
             window.exportToExcel = function() {
                 try {
-                    // Create worksheet data
+                    // Create worksheet data with updated headers
                     const wsData = [
-                        ['Nombre', 'Apellido', 'Días', 'Turnos', 'Horarios', 'Cuota', 'Mes/Año', 'Método de Pago']
+                        ['Nombre', 'Apellido', 'Días', 'Turnos', 'Horarios', 'Cuota', 'Método de Pago', 'Fecha y Hora de Pago']
                     ];
 
                     students.forEach(student => {
+                        // Format the payment date for Excel
+                        const fechaPago = student.fechaPago ? 
+                            new Date(student.fechaPago).toLocaleString('es-AR', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }) : 'No registrado';
+
                         wsData.push([
                             student.nombre,
                             student.apellido,
@@ -351,14 +361,27 @@
                             Array.isArray(student.turnos) ? student.turnos.join(', ') : student.turnos,
                             Array.isArray(student.horarios) ? student.horarios.join(', ') : student.horarios,
                             student.cuota,
-                            student.mesAnio,
-                            student.metodoPago
+                            student.metodoPago.toUpperCase(),
+                            fechaPago
                         ]);
                     });
 
                     // Create workbook
                     const wb = XLSX.utils.book_new();
                     const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+                    // Add column widths for better readability
+                    const colWidths = [
+                        {wch: 15}, // Nombre
+                        {wch: 15}, // Apellido
+                        {wch: 20}, // Días
+                        {wch: 20}, // Turnos
+                        {wch: 20}, // Horarios
+                        {wch: 10}, // Cuota
+                        {wch: 15}, // Método de Pago
+                        {wch: 20}  // Fecha y Hora de Pago
+                    ];
+                    ws['!cols'] = colWidths;
 
                     // Add worksheet to workbook
                     XLSX.utils.book_append_sheet(wb, ws, 'Alumnos');
