@@ -133,7 +133,6 @@
                         <th>Apellido</th>
                         <th>Método de Pago</th>
                         <th>Cuota</th>
-                        <th>Mes/Año</th>
                         <th>Fecha de Pago</th>
                     </tr>`;
 
@@ -142,10 +141,8 @@
                         new Date(student.fechaPago).toLocaleDateString('es-AR', {
                             year: 'numeric',
                             month: '2-digit',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        }) : '';
+                            day: '2-digit'
+                        }) : 'No registrado';
 
                     html += `
                         <tr>
@@ -153,7 +150,6 @@
                             <td>${student.apellido}</td>
                             <td>${student.metodoPago.toUpperCase()}</td>
                             <td>$${student.cuota}</td>
-                            <td>${student.mesAnio}</td>
                             <td>${fechaPago}</td>
                         </tr>`;
                 });

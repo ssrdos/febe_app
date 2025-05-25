@@ -85,12 +85,10 @@
                 students.forEach((student, index) => {
                     // Format the payment date
                     const fechaPago = student.fechaPago ? 
-                        new Date(student.fechaPago).toLocaleString('es-AR', {
+                        new Date(student.fechaPago).toLocaleDateString('es-AR', {
                             year: 'numeric',
                             month: '2-digit',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit'
+                            day: '2-digit'
                         }) : 'No registrado';
 
                     html += `
@@ -252,10 +250,10 @@
                         <input type="number" class="detail-edit-input" value="${student.cuota}" id="edit-cuota">
                     </div>
                     <div class="detail-item">
-                        <strong>Fecha y Hora de Pago:</strong>
-                        <input type="datetime-local" 
+                        <strong>Fecha de Pago:</strong>
+                        <input type="date" 
                                class="detail-edit-input" 
-                               value="${student.fechaPago ? student.fechaPago.slice(0, 16) : ''}" 
+                               value="${student.fechaPago ? student.fechaPago.slice(0, 10) : ''}" 
                                id="edit-fechaPago">
                     </div>
                     <div class="detail-item">
@@ -340,18 +338,16 @@
                 try {
                     // Create worksheet data with updated headers
                     const wsData = [
-                        ['Nombre', 'Apellido', 'Días', 'Turnos', 'Horarios', 'Cuota', 'Método de Pago', 'Fecha y Hora de Pago']
+                        ['Nombre', 'Apellido', 'Días', 'Turnos', 'Horarios', 'Cuota', 'Método de Pago', 'Fecha de Pago']
                     ];
 
                     students.forEach(student => {
                         // Format the payment date for Excel
                         const fechaPago = student.fechaPago ? 
-                            new Date(student.fechaPago).toLocaleString('es-AR', {
+                            new Date(student.fechaPago).toLocaleDateString('es-AR', {
                                 year: 'numeric',
                                 month: '2-digit',
-                                day: '2-digit',
-                                hour: '2-digit',
-                                minute: '2-digit'
+                                day: '2-digit'
                             }) : 'No registrado';
 
                         wsData.push([

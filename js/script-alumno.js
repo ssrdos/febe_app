@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     horarios: Array.from(document.querySelectorAll('input[name="horarios"]:checked')).map(cb => cb.value),
                     cuota: document.getElementById('cuota').value,
                     mesAnio: new Date(document.getElementById('fechaPago').value).toISOString().slice(0,7), // Get YYYY-MM
-                    fechaPago: document.getElementById('fechaPago').value,
+                    fechaPago: document.getElementById('fechaPago').value, // Will now store only the date
                     metodoPago: document.getElementById('metodoPago').value,
                     timestamp: Date.now()
                 };
