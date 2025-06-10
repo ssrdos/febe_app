@@ -14,6 +14,23 @@
 <body>
     <div class="list-container">
         <h1 class="form-title">LISTA DE ALUMNOS</h1>
+        
+        <!-- Counter section -->
+        <div class="counter-container">
+            <div class="counter-item">
+                <span class="counter-number" id="totalCounter">0</span>
+                <span class="counter-label">Total Alumnos</span>
+            </div>
+            <div class="counter-item">
+                <span class="counter-number" id="paidCounter">0</span>
+                <span class="counter-label">Abonados</span>
+            </div>
+            <div class="counter-item">
+                <span class="counter-number" id="unpaidCounter">0</span>
+                <span class="counter-label">No Abonados</span>
+            </div>
+        </div>
+
         <div class="filter-container">
             <!-- Add payment status filter -->
             <div class="filter-group">
@@ -113,18 +130,32 @@
                 try {
                     const studentsRef = ref(db, 'students');
                     const snapshot = await get(studentsRef);
-                    console.log('Firebase snapshot:', snapshot.val()); // Debug log
+                    let totalStudents = 0;
+                    let paidStudents = 0;
+                    let unpaidStudents = 0;
 
                     if (snapshot.exists()) {
                         students = [];
                         snapshot.forEach((childSnapshot) => {
-                            students.push({
+                            const student = {
                                 id: childSnapshot.key,
                                 ...childSnapshot.val()
-                            });
+                            };
+                            students.push(student);
+                            totalStudents++;
+                            if (student.metodoPago === 'no_abonado') {
+                                unpaidStudents++;
+                            } else {
+                                paidStudents++;
+                            }
                         });
-                        console.log('Loaded students:', students); // Debug log
                     }
+
+                    // Update counters
+                    document.getElementById('totalCounter').textContent = totalStudents;
+                    document.getElementById('paidCounter').textContent = paidStudents;
+                    document.getElementById('unpaidCounter').textContent = unpaidStudents;
+
                     return students;
                 } catch (error) {
                     console.error('Error loading students:', error);
@@ -132,12 +163,14 @@
                 }
             }
 
-            // Function to filter students
+            // Keep track of filtered students
+            let filteredStudents = [];
+
             function filterStudents() {
                 const searchTerm = searchInput.value.toLowerCase();
                 const paymentStatus = paymentStatusFilter.value;
                 
-                let filteredStudents = students;
+                filteredStudents = [...students]; // Create a copy of all students
 
                 // Filter by payment status
                 if (paymentStatus) {
@@ -170,15 +203,33 @@
                 studentsList.innerHTML = '<p class="error">Error al cargar los alumnos</p>';
             }
 
+            // Update counters
+            function updateCounters() {
+                const totalCounter = document.getElementById('totalCounter');
+                const paidCounter = document.getElementById('paidCounter');
+                const unpaidCounter = document.getElementById('unpaidCounter');
+
+                totalCounter.innerText = students.length;
+                paidCounter.innerText = students.filter(s => s.metodoPago !== 'no_abonado').length;
+                unpaidCounter.innerText = students.filter(s => s.metodoPago === 'no_abonado').length;
+            }
+
             // Search functionality
-            searchInput.addEventListener('input', filterStudents);
+            searchInput.addEventListener('input', () => {
+                filterStudents();
+                updateCounters();
+            });
 
             // Filter by payment status
-            paymentStatusFilter.addEventListener('change', filterStudents);
+            paymentStatusFilter.addEventListener('change', () => {
+                filterStudents();
+                updateCounters();
+            });
 
             // Make functions available globally
             window.viewStudent = function(index) {
-                const student = students[index];
+                // Use the filtered array instead of the main array
+                const student = filteredStudents[index];
                 studentsList.style.display = 'none';
                 studentDetail.style.display = 'block';
                 
@@ -221,7 +272,13 @@
             };
 
             window.editStudent = function(index) {
-                const student = students[index];
+                // Use the filtered array
+                const student = filteredStudents[index];
+                if (!student) {
+                    console.error('Student not found');
+                    return;
+                }
+
                 const detailContent = document.querySelector('.detail-content');
                 
                 const editHtml = `
@@ -266,14 +323,15 @@
                         </select>
                     </div>
                     <div class="detail-actions">
-                        <button onclick="saveChanges(${index})" class="btn-save">Guardar</button>
-                        <button onclick="cancelEdit(${index})" class="btn-volver">Cancelar</button>
+                        <button onclick="saveChanges('${student.id}')" class="btn-save">Guardar</button>
+                        <button onclick="cancelEdit('${student.id}')" class="btn-volver">Cancelar</button>
                     </div>`;
                 
                 detailContent.innerHTML = editHtml;
             };
 
-            window.saveChanges = async function(index) {
+            // También actualiza la función saveChanges para usar el ID
+            window.saveChanges = async function(studentId) {
                 const student = {
                     nombre: document.getElementById('edit-nombre').value,
                     apellido: document.getElementById('edit-apellido').value,
@@ -288,12 +346,14 @@
                 };
 
                 try {
-                    const currentStudent = students[index];
-                    await set(ref(db, `students/${currentStudent.id}`), student);
+                    await set(ref(db, `students/${studentId}`), student);
                     students = await loadStudents();
-                    viewStudent(index);
-                    renderTable(students);
-                    alert('Cambios guardados correctamente');
+                    filteredStudents = [...students]; // Update filtered array
+                    filterStudents(); // Apply current filters
+                    const index = filteredStudents.findIndex(s => s.id === studentId);
+                    if (index !== -1) {
+                        viewStudent(index);
+                    }
                 } catch (error) {
                     console.error('Error saving changes:', error);
                     alert('Error al guardar los cambios');
@@ -306,12 +366,14 @@
 
             window.deleteStudent = async function(index) {
                 if (confirm('¿Está seguro que desea eliminar este alumno?')) {
-                    const student = students[index];
+                    // Use the filtered array
+                    const student = filteredStudents[index];
                     try {
                         await remove(ref(db, `students/${student.id}`));
                         students = await loadStudents();
+                        filteredStudents = [...students]; // Update filtered array
                         closeDetail();
-                        renderTable(students);
+                        filterStudents(); // Use filterStudents instead of renderTable
                         alert('Alumno eliminado correctamente');
                     } catch (error) {
                         console.error('Error deleting student:', error);

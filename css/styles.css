@@ -325,7 +325,7 @@ input[type="datetime-local"].form-input {
 /* Button improvements */
 .btn-guardar {
     background-color: var(--accent-primary);
-    color: white;
+    color: rgb(255, 255, 255);
     padding: 12px;
     border: none;
     border-radius: 8px;
@@ -1333,6 +1333,68 @@ input:valid {
     
     .students-table td {
         padding: 6px 8px;
+    }
+}
+
+/* Contador */
+.counter-container {
+    background-color: var(--bg-secondary);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.counter-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 20px;
+    border-radius: 6px;
+    background-color: var(--bg-primary);
+}
+
+.counter-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--accent-primary);
+}
+
+.counter-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+/* Button save styles */
+.btn-save {
+    background-color: #18652a;
+    color: white;
+    width: 100%;
+    padding: 12px;
+    margin: 5px 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    min-height: 44px;
+    transition: all 0.3s ease;
+}
+
+.btn-save:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+
+@media screen and (max-width: 768px) {
+    .btn-save {
+        font-size: 12px;
+        padding: 8px;
     }
 }
 

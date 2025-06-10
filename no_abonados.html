@@ -24,6 +24,13 @@
             </div>
         </div>
 
+        <div class="counter-container">
+            <div class="counter-item">
+                <span class="counter-number" id="unpaidCounter">0</span>
+                <span class="counter-label">Alumnos No Abonados</span>
+            </div>
+        </div>
+
         <div id="unpaidStudentsList" class="students-list">
             <!-- Lista de alumnos se generará aquí -->
         </div>
@@ -76,7 +83,7 @@
 
             async function renderTable() {
                 const students = await getFilteredStudents();
-                console.log('Unpaid students:', students);
+                document.getElementById('unpaidCounter').textContent = students.length;
 
                 if (students.length === 0) {
                     unpaidStudentsList.innerHTML = '<p class="no-students">No hay alumnos no abonados</p>';
