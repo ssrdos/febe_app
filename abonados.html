@@ -8,13 +8,7 @@
     <link rel="stylesheet" href="css/styles.css">
     <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="js/theme.js"></script>
-    <script>
-        // Make jsPDF available globally
-        window.jsPDF = window.jspdf.jsPDF;
-    </script>
 </head>
 <body>
     <div class="list-container">
@@ -84,11 +78,9 @@
         <div class="modal-content receipt-modal-content">
             <div class="modal-header">
                 <h2>Comprobante de Pago</h2>
-                <button class="btn-close" onclick="closeReceiptModal()">×</button>
             </div>
             <div id="receiptContent"></div>
             <div class="modal-actions">
-                <button class="btn-export-pdf" onclick="exportReceiptAsPDF()">EXPORTAR PDF</button>
                 <button class="btn-close" onclick="closeReceiptModal()">CERRAR</button>
             </div>
         </div>
@@ -388,148 +380,7 @@
             document.getElementById('receiptModal').style.display = 'none';
         };
 
-        // Function to export receipt as PDF
-        window.exportReceiptAsPDF = function() {
-            const receiptElement = document.getElementById('receiptToPrint');
-            
-            if (!receiptElement) {
-                alert('No se encontró el elemento del comprobante');
-                return;
-            }
 
-            // Check if libraries are loaded
-            if (typeof window.jsPDF === 'undefined') {
-                alert('Error: La librería PDF no está cargada. Recarga la página e intenta nuevamente.');
-                return;
-            }
-
-            if (typeof html2canvas === 'undefined') {
-                alert('Error: La librería de captura no está cargada. Recarga la página e intenta nuevamente.');
-                return;
-            }
-
-            // Show loading message
-            const originalButtonText = event.target.textContent;
-            event.target.textContent = 'GENERANDO...';
-            event.target.disabled = true;
-
-            // Try alternative approach if the first one fails
-            const tryAlternativeApproach = () => {
-                html2canvas(receiptElement, {
-                    scale: 1,
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: '#ffffff',
-                    logging: false,
-                    removeContainer: true,
-                    foreignObjectRendering: false,
-                    imageTimeout: 0,
-                    ignoreElements: (element) => {
-                        // Ignore elements that might cause issues
-                        return element.classList.contains('modal-actions') || 
-                               element.classList.contains('modal-header');
-                    }
-                }).then(canvas => {
-                    try {
-                        const imgData = canvas.toDataURL('image/png');
-                        const pdf = new window.jsPDF('p', 'mm', 'a4');
-                        const imgWidth = 210;
-                        const pageHeight = 295;
-                        const imgHeight = canvas.height * imgWidth / canvas.width;
-                        let heightLeft = imgHeight;
-                        let position = 0;
-
-                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                        heightLeft -= pageHeight;
-
-                        while (heightLeft >= 0) {
-                            position = heightLeft - imgHeight;
-                            pdf.addPage();
-                            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                            heightLeft -= pageHeight;
-                        }
-
-                        // Get student name for filename
-                        const studentNameElement = document.querySelector('#receiptToPrint .receipt-info p strong');
-                        const studentName = studentNameElement ? studentNameElement.textContent.replace(':', '').trim() : 'alumno';
-                        const receiptNumberElement = document.querySelector('#receiptToPrint .receipt-section:last-child p:last-child strong');
-                        const receiptNumber = receiptNumberElement ? receiptNumberElement.textContent : '00000000';
-                        const fileName = `comprobante_${studentName}_${receiptNumber}_${new Date().toISOString().split('T')[0]}.pdf`;
-                        
-                        pdf.save(fileName);
-                        
-                        // Restore button
-                        event.target.textContent = originalButtonText;
-                        event.target.disabled = false;
-                        
-                    } catch (pdfError) {
-                        console.error('Error creating PDF:', pdfError);
-                        alert('Error al crear el PDF. Intente nuevamente.');
-                        event.target.textContent = originalButtonText;
-                        event.target.disabled = false;
-                    }
-                }).catch(canvasError => {
-                    console.error('Error generating canvas:', canvasError);
-                    alert('Error al generar la imagen del comprobante. Intente nuevamente.');
-                    event.target.textContent = originalButtonText;
-                    event.target.disabled = false;
-                });
-            };
-
-            // Try the first approach
-            html2canvas(receiptElement, {
-                scale: 1,
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: '#ffffff',
-                logging: false,
-                removeContainer: true,
-                foreignObjectRendering: false,
-                imageTimeout: 0
-            }).then(canvas => {
-                try {
-                    const imgData = canvas.toDataURL('image/png');
-                    const pdf = new window.jsPDF('p', 'mm', 'a4');
-                    const imgWidth = 210;
-                    const pageHeight = 295;
-                    const imgHeight = canvas.height * imgWidth / canvas.width;
-                    let heightLeft = imgHeight;
-                    let position = 0;
-
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-
-                    while (heightLeft >= 0) {
-                        position = heightLeft - imgHeight;
-                        pdf.addPage();
-                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                        heightLeft -= pageHeight;
-                    }
-
-                    // Get student name for filename
-                    const studentNameElement = document.querySelector('#receiptToPrint .receipt-info p strong');
-                    const studentName = studentNameElement ? studentNameElement.textContent.replace(':', '').trim() : 'alumno';
-                    const receiptNumberElement = document.querySelector('#receiptToPrint .receipt-section:last-child p:last-child strong');
-                    const receiptNumber = receiptNumberElement ? receiptNumberElement.textContent : '00000000';
-                    const fileName = `comprobante_${studentName}_${receiptNumber}_${new Date().toISOString().split('T')[0]}.pdf`;
-                    
-                    pdf.save(fileName);
-                    
-                    // Restore button
-                    event.target.textContent = originalButtonText;
-                    event.target.disabled = false;
-                    
-                } catch (pdfError) {
-                    console.error('Error creating PDF:', pdfError);
-                    // Try alternative approach
-                    tryAlternativeApproach();
-                }
-            }).catch(canvasError => {
-                console.error('Error generating canvas:', canvasError);
-                // Try alternative approach
-                tryAlternativeApproach();
-            });
-        };
     </script>
     <script src="js/theme.js"></script>
 
