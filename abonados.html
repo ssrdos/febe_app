@@ -41,6 +41,13 @@
                        class="form-input search-input" 
                        placeholder="Buscar por nombre o apellido...">
             </div>
+            
+            <!-- Add reset payments button -->
+            <button type="button" 
+                    class="btn-reset-payments" 
+                    onclick="resetAllPayments()">
+                RESETEAR PAGOS
+            </button>
         </div>
 
         <!-- Add counter container -->
@@ -68,7 +75,7 @@
 
     <script type="module">
         import { db } from './js/firebase-config.js';
-        import { ref, get } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+        import { ref, get, set } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
 
         window.onload = async function() {
             const paidStudentsList = document.getElementById('paidStudentsList');
@@ -219,6 +226,49 @@
         // Make closePaymentHistory available globally
         window.closePaymentHistory = function() {
             document.getElementById('paymentHistoryModal').style.display = 'none';
+        };
+
+        // Make resetAllPayments available globally
+        window.resetAllPayments = async function() {
+            if (confirm('¿Está seguro que desea resetear todos los pagos? Esto cambiará el estado de pago a "No Abonado" y limpiará las fechas de pago, pero mantendrá todos los demás datos de los alumnos.')) {
+                if (confirm('¿REALMENTE desea proceder? Esta acción afectará a todos los alumnos abonados.')) {
+                    try {
+                        const studentsRef = ref(db, 'students');
+                        const snapshot = await get(studentsRef);
+                        
+                        if (snapshot.exists()) {
+                            let updatePromises = [];
+                            
+                            snapshot.forEach((childSnapshot) => {
+                                const student = childSnapshot.val();
+                                // Solo resetear alumnos que estén abonados
+                                if (student.metodoPago !== 'no_abonado') {
+                                    const updatedStudent = {
+                                        ...student,
+                                        metodoPago: 'no_abonado',
+                                        fechaPago: null,
+                                        timestamp: Date.now()
+                                    };
+                                    
+                                    const studentRef = ref(db, `students/${childSnapshot.key}`);
+                                    updatePromises.push(set(studentRef, updatedStudent));
+                                }
+                            });
+                            
+                            await Promise.all(updatePromises);
+                            alert('Todos los pagos han sido reseteados correctamente. Los alumnos ahora aparecen como "No Abonados".');
+                            
+                            // Recargar la tabla
+                            location.reload();
+                        } else {
+                            alert('No hay alumnos registrados para resetear.');
+                        }
+                    } catch (error) {
+                        console.error('Error resetting payments:', error);
+                        alert('Error al resetear los pagos');
+                    }
+                }
+            }
         };
     </script>
     <script src="js/theme.js"></script>
