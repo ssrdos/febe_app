@@ -678,6 +678,397 @@ input[type="month"]::-webkit-calendar-picker-indicator {
     transform: translateY(-1px);
 }
 
+.btn-receipt {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    margin: 2px;
+}
+
+.btn-receipt:hover {
+    background-color: #45a049;
+    transform: translateY(-1px);
+}
+
+.btn-export-pdf {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    margin: 5px;
+}
+
+.btn-export-pdf:hover {
+    background-color: #1976D2;
+    transform: translateY(-1px);
+}
+
+/* Receipt Styles */
+.receipt-modal-content {
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid var(--border-color);
+}
+
+.receipt-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+    color: #333;
+    box-sizing: border-box;
+}
+
+.receipt-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 3px solid #1e4c9a;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.receipt-logo-container {
+    flex-shrink: 0;
+}
+
+.receipt-logo {
+    width: 70px;
+    height: auto;
+    max-height: 70px;
+    display: block;
+}
+
+.receipt-title {
+    text-align: center;
+    flex-grow: 1;
+    min-width: 200px;
+}
+
+.receipt-title h1 {
+    color: #1e4c9a;
+    font-size: 22px;
+    margin: 0 0 5px 0;
+    font-weight: bold;
+    line-height: 1.2;
+}
+
+.receipt-title h2 {
+    color: #666;
+    font-size: 15px;
+    margin: 0;
+    font-weight: normal;
+    line-height: 1.2;
+}
+
+.receipt-info {
+    margin-bottom: 25px;
+}
+
+.receipt-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #1e4c9a;
+}
+
+.receipt-section h3 {
+    color: #1e4c9a;
+    font-size: 15px;
+    margin: 0 0 10px 0;
+    font-weight: bold;
+    text-transform: uppercase;
+    line-height: 1.2;
+}
+
+.receipt-section p {
+    margin: 8px 0;
+    font-size: 14px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.receipt-section strong {
+    color: #333;
+    font-weight: bold;
+}
+
+.receipt-footer {
+    text-align: center;
+    padding-top: 15px;
+    border-top: 2px solid #ddd;
+    color: #666;
+    font-size: 11px;
+}
+
+.receipt-footer p {
+    margin: 5px 0;
+    line-height: 1.3;
+}
+
+/* Tablet styles */
+@media screen and (max-width: 768px) {
+    .receipt-container {
+        padding: 15px;
+        margin: 10px;
+        max-width: 100%;
+    }
+    
+    .receipt-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    
+    .receipt-logo {
+        width: 60px;
+        margin: 0 auto 10px auto;
+    }
+    
+    .receipt-title {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .receipt-title h1 {
+        font-size: 20px;
+    }
+    
+    .receipt-title h2 {
+        font-size: 14px;
+    }
+    
+    .receipt-section {
+        padding: 12px;
+        margin-bottom: 15px;
+    }
+    
+    .receipt-section h3 {
+        font-size: 14px;
+    }
+    
+    .receipt-section p {
+        font-size: 13px;
+    }
+    
+    .receipt-footer {
+        font-size: 10px;
+    }
+}
+
+/* Mobile styles */
+@media screen and (max-width: 480px) {
+    .receipt-container {
+        padding: 12px;
+        margin: 5px;
+        border-radius: 8px;
+    }
+    
+    .receipt-header {
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+    }
+    
+    .receipt-logo {
+        width: 50px;
+        margin-bottom: 8px;
+    }
+    
+    .receipt-title h1 {
+        font-size: 18px;
+        margin-bottom: 3px;
+    }
+    
+    .receipt-title h2 {
+        font-size: 12px;
+    }
+    
+    .receipt-section {
+        padding: 10px;
+        margin-bottom: 12px;
+    }
+    
+    .receipt-section h3 {
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+    
+    .receipt-section p {
+        font-size: 12px;
+        margin: 6px 0;
+    }
+    
+    .receipt-footer {
+        padding-top: 12px;
+        font-size: 9px;
+    }
+}
+
+/* Small mobile styles */
+@media screen and (max-width: 360px) {
+    .receipt-container {
+        padding: 10px;
+        margin: 3px;
+    }
+    
+    .receipt-header {
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+    }
+    
+    .receipt-logo {
+        width: 45px;
+        margin-bottom: 6px;
+    }
+    
+    .receipt-title h1 {
+        font-size: 16px;
+    }
+    
+    .receipt-title h2 {
+        font-size: 11px;
+    }
+    
+    .receipt-section {
+        padding: 8px;
+        margin-bottom: 10px;
+    }
+    
+    .receipt-section h3 {
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+    
+    .receipt-section p {
+        font-size: 11px;
+        margin: 5px 0;
+    }
+    
+    .receipt-footer {
+        padding-top: 10px;
+        font-size: 8px;
+    }
+}
+
+/* Modal responsive improvements */
+.receipt-modal-content {
+    max-width: 95vw;
+    max-height: 95vh;
+    overflow-y: auto;
+    margin: 2.5vh auto;
+    padding: 20px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid var(--border-color);
+    flex-wrap: wrap;
+}
+
+.btn-export-pdf {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    margin: 5px;
+    min-width: 120px;
+}
+
+.btn-export-pdf:hover {
+    background-color: #1976D2;
+    transform: translateY(-1px);
+}
+
+@media screen and (max-width: 768px) {
+    .receipt-modal-content {
+        max-width: 98vw;
+        max-height: 98vh;
+        margin: 1vh auto;
+        padding: 15px;
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-export-pdf {
+        width: 100%;
+        max-width: 200px;
+        padding: 10px 20px;
+        font-size: 13px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .receipt-modal-content {
+        max-width: 100vw;
+        max-height: 100vh;
+        margin: 0;
+        border-radius: 0;
+        padding: 10px;
+    }
+    
+    .modal-actions {
+        margin-top: 15px;
+        padding-top: 15px;
+    }
+    
+    .btn-export-pdf {
+        width: 100%;
+        max-width: 180px;
+        padding: 12px 16px;
+        font-size: 12px;
+        margin: 3px;
+    }
+}
+
 @media screen and (max-width: 480px) {
     .btn-delete-all,
     .btn-export,
@@ -1282,16 +1673,74 @@ input:valid {
     height: 100%;
     background-color: rgba(0,0,0,0.5);
     z-index: 1000;
+    overflow-y: auto;
 }
 
 .modal-content {
     background-color: var(--bg-secondary);
-    margin: 15% auto;
+    margin: 5% auto;
     padding: 20px;
     border-radius: 8px;
-    width: 80%;
+    width: 90%;
     max-width: 600px;
     position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@media screen and (max-width: 768px) {
+    .modal-content {
+        margin: 2% auto;
+        width: 95%;
+        padding: 15px;
+        max-height: 96vh;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .modal-content {
+        margin: 0;
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+        padding: 10px;
+        max-height: 100vh;
+    }
+}
+
+.btn-close {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    min-width: 80px;
+}
+
+.btn-close:hover {
+    background-color: #c82333;
+    transform: translateY(-1px);
+}
+
+@media screen and (max-width: 768px) {
+    .btn-close {
+        width: 100%;
+        max-width: 200px;
+        padding: 10px 20px;
+        font-size: 13px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .btn-close {
+        width: 100%;
+        max-width: 180px;
+        padding: 12px 16px;
+        font-size: 12px;
+    }
 }
 
 .btn-history {
