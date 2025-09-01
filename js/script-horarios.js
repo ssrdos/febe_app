@@ -4,10 +4,7 @@ import { ref, get } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-dat
 document.addEventListener('DOMContentLoaded', async function() {
     const dayFilter = document.getElementById('dayFilter');
     const turnFilter = document.getElementById('turnFilter');
-<<<<<<< HEAD
     const hourFilter = document.getElementById('hourFilter');
-=======
->>>>>>> 1c02ea6807929384094183e93d1bb4b56ce6ac16
     const scheduleList = document.getElementById('scheduleList');
     let students = [];
 
@@ -32,8 +29,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             return [];
         }
     }
-    
-<<<<<<< HEAD
     // Function to populate hour filter with actual data
     function populateHourFilter() {
         const allHours = new Set();
@@ -267,61 +262,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     try {
         students = await loadStudents();
         populateHourFilter(); // Populate hour filter with actual data
-=======
-    // Function to render the schedule
-    function renderSchedule() {
-        const selectedDay = dayFilter.value;
-        const selectedTurn = turnFilter.value;
-        
-        const filteredStudents = students.filter(student => {
-            const matchDay = !selectedDay || student.dias.includes(selectedDay);
-            const matchTurn = !selectedTurn || student.turnos.includes(selectedTurn);
-            return matchDay && matchTurn;
-        });
-
-        if (filteredStudents.length === 0) {
-            scheduleList.innerHTML = '<p class="no-students">No hay alumnos en este horario</p>';
-            return;
-        }
-
-        let html = '<table class="students-table">';
-        html += `
-            <tr>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Días</th>
-                <th>Turnos</th>
-                <th>Horarios</th>
-            </tr>`;
-
-        filteredStudents.forEach(student => {
-            html += `
-                <tr>
-                    <td>${student.nombre}</td>
-                    <td>${student.apellido}</td>
-                    <td>${Array.isArray(student.dias) ? student.dias.join(', ') : student.dias}</td>
-                    <td>${Array.isArray(student.turnos) ? student.turnos.join(', ') : student.turnos}</td>
-                    <td>${Array.isArray(student.horarios) ? student.horarios.join(', ') : student.horarios}</td>
-                </tr>`;
-        });
-
-        html += '</table>';
-        scheduleList.innerHTML = html;
-    }
-
-    // Initialize data and render
-    try {
-        students = await loadStudents();
->>>>>>> 1c02ea6807929384094183e93d1bb4b56ce6ac16
         renderSchedule();
         
         // Add event listeners
         dayFilter.addEventListener('change', renderSchedule);
         turnFilter.addEventListener('change', renderSchedule);
-<<<<<<< HEAD
         hourFilter.addEventListener('change', renderSchedule);
-=======
->>>>>>> 1c02ea6807929384094183e93d1bb4b56ce6ac16
     } catch (error) {
         console.error('Error initializing schedule:', error);
         scheduleList.innerHTML = '<p class="error">Error al cargar los horarios</p>';
