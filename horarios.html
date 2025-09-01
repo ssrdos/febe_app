@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horarios - Escuela de Padel Febe Ruiz</title>
+    <link rel="icon" type="image/png" href="media/tenis.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/theme.js"></script>
+</head>
+<body>
+    <div class="list-container">
+        <h1 class="form-title">HORARIOS</h1>
+        
+        <div class="filter-container">
+            <div class="filter-group">
+                <label class="filter-label">Filtrar por día:</label>
+                <select id="dayFilter" class="form-input">
+                    <option value="">Todos los días</option>
+                    <option value="lunes">Lunes</option>
+                    <option value="martes">Martes</option>
+                    <option value="miercoles">Miércoles</option>
+                    <option value="jueves">Jueves</option>
+                    <option value="viernes">Viernes</option>
+                    <option value="sabado">Sábado</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Filtrar por turno:</label>
+                <select id="turnFilter" class="form-input">
+                    <option value="">Todos los turnos</option>
+                    <option value="mañana">Mañana</option>
+                    <option value="siesta">Siesta</option>
+                    <option value="tarde">Tarde</option>
+                    <option value="noche">Noche</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Filtrar por hora:</label>
+                <select id="hourFilter" class="form-input">
+                    <option value="">Todas las horas</option>
+                    <option value="8:00">8:00</option>
+                    <option value="9:00">9:00</option>
+                    <option value="10:00">10:00</option>
+                    <option value="11:00">11:00</option>
+                    <option value="12:00">12:00</option>
+                    <option value="13:00">13:00</option>
+                    <option value="14:00">14:00</option>
+                    <option value="15:00">15:00</option>
+                    <option value="16:00">16:00</option>
+                    <option value="17:00">17:00</option>
+                    <option value="18:00">18:00</option>
+                    <option value="19:00">19:00</option>
+                    <option value="20:00">20:00</option>
+                    <option value="21:00">21:00</option>
+                    <option value="22:00">22:00</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="scheduleList" class="schedule-container"></div>
+        
+        <button type="button" class="btn-volver" onclick="window.location.href='menu.html'">VOLVER</button>
+    </div>
+    <script type="module" src="js/script-horarios.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/navigation.js"></script>
+</body>
+</html>

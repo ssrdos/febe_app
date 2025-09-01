@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alumnos Abonados - Escuela de Padel Febe Ruiz</title>
+    <link rel="icon" type="image/png" href="media/tenis.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    <script src="js/theme.js"></script>
+</head>
+<body>
+    <div class="list-container">
+        <h1 class="form-title">ALUMNOS ABONADOS</h1>
+        
+        <div class="filter-container">
+            <div class="filter-group">
+                <label class="filter-label">Filtrar por método de pago:</label>
+                <select id="paymentFilter" class="form-input">
+                    <option value="">Todos los pagos</option>
+                    <option value="efectivo">Efectivo</option>
+                    <option value="transferencia">Transferencia</option>
+                    <option value="ambas">Ambas</option>
+                </select>
+            </div>
+
+            <!-- Add new month filter -->
+            <div class="filter-group">
+                <label class="filter-label">Filtrar por mes:</label>
+                <input type="month" 
+                       id="monthFilter" 
+                       class="form-input"
+                       value="">
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Buscar alumno:</label>
+                <input type="text" 
+                       id="searchInput" 
+                       class="form-input search-input" 
+                       placeholder="Buscar por nombre o apellido...">
+            </div>
+            
+            <!-- Add reset payments button -->
+            <button type="button" 
+                    class="btn-reset-payments" 
+                    onclick="resetAllPayments()">
+                RESETEAR PAGOS
+            </button>
+        </div>
+
+        <!-- Add counter container -->
+        <div class="counter-container">
+            <div class="counter-item">
+                <span class="counter-number" id="paidCounter">0</span>
+                <span class="counter-label">Alumnos Abonados</span>
+            </div>
+        </div>
+
+        <div id="paidStudentsList" class="students-list">
+            <!-- Lista de alumnos se generará aquí -->
+        </div>
+        
+        <button type="button" class="btn-volver" onclick="window.location.href='menu.html'">VOLVER</button>
+    </div>
+
+    <div id="paymentHistoryModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Historial de Pagos</h2>
+            <div id="paymentHistoryContent"></div>
+            <button class="btn-close" onclick="closePaymentHistory()">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div id="receiptModal" class="modal" style="display: none;">
+        <div class="modal-content receipt-modal-content">
+            <div class="modal-header">
+                <h2>Comprobante de Pago</h2>
+            </div>
+            <div id="receiptContent"></div>
+            <div class="modal-actions">
+                <button class="btn-close" onclick="closeReceiptModal()">CERRAR</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from './js/firebase-config.js';
+        import { ref, get, set } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+
+        window.onload = async function() {
+            const paidStudentsList = document.getElementById('paidStudentsList');
+            const paymentFilter = document.getElementById('paymentFilter');
+            const monthFilter = document.getElementById('monthFilter');
+            const searchInput = document.getElementById('searchInput');
+            
+            async function getFilteredStudents() {
+                try {
+                    const studentsRef = ref(db, 'students');
+                    const snapshot = await get(studentsRef);
+                    let students = [];
+
+                    if (snapshot.exists()) {
+                        snapshot.forEach((childSnapshot) => {
+                            const student = {
+                                id: childSnapshot.key,
+                                ...childSnapshot.val()
+                            };
+                            if (student.metodoPago !== 'no_abonado') {
+                                students.push(student);
+                            }
+                        });
+                    }
+
+                    // Aplicar filtro de método de pago
+                    if (paymentFilter.value) {
+                        students = students.filter(student => 
+                            student.metodoPago === paymentFilter.value
+                        );
+                    }
+
+                    // Aplicar filtro de mes
+                    if (monthFilter.value) {
+                        students = students.filter(student => 
+                            student.mesAnio === monthFilter.value
+                        );
+                    }
+
+                    // Aplicar búsqueda por nombre/apellido
+                    const searchTerm = searchInput.value.toLowerCase();
+                    if (searchTerm) {
+                        students = students.filter(student => {
+                            const fullName = `${student.nombre} ${student.apellido}`.toLowerCase();
+                            const reverseName = `${student.apellido} ${student.nombre}`.toLowerCase();
+                            return fullName.includes(searchTerm) || reverseName.includes(searchTerm);
+                        });
+                    }
+
+                    return students;
+                } catch (error) {
+                    console.error('Error getting students:', error);
+                    return [];
+                }
+            }
+
+            async function renderTable() {
+                const students = await getFilteredStudents();
+                document.getElementById('paidCounter').textContent = students.length;
+
+                if (students.length === 0) {
+                    paidStudentsList.innerHTML = '<p class="no-students">No hay alumnos abonados</p>';
+                    return;
+                }
+
+                let html = '<table class="students-table">';
+                html += `
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Método de Pago</th>
+                        <th>Cuota</th>
+                        <th>Fecha de Pago</th>
+                        <th>Acciones</th>
+                    </tr>`;
+
+                students.forEach(student => {
+                    const fechaPago = student.fechaPago ? 
+                        new Date(student.fechaPago).toLocaleDateString('es-AR', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                        }) : 'No registrado';
+
+                    html += `
+                        <tr>
+                            <td>${student.nombre}</td>
+                            <td>${student.apellido}</td>
+                            <td>${student.metodoPago.toUpperCase()}</td>
+                            <td>$${student.cuota}</td>
+                            <td>${fechaPago}</td>
+                            <td>
+                                <button onclick="generateReceipt('${student.id}')" class="btn-receipt">COMPROBANTE</button>
+                            </td>
+                        </tr>`;
+                });
+
+                html += '</table>';
+                paidStudentsList.innerHTML = html;
+            }
+
+            // Event listeners
+            paymentFilter.addEventListener('change', renderTable);
+            monthFilter.addEventListener('change', renderTable);
+            searchInput.addEventListener('input', renderTable);
+
+            // Renderizado inicial
+            await renderTable();
+        }
+
+        // Make viewPaymentHistory available globally
+        window.viewPaymentHistory = async function(studentId) {
+            try {
+                const historyRef = ref(db, `payments/${studentId}`);
+                const snapshot = await get(historyRef);
+                const modal = document.getElementById('paymentHistoryModal');
+                const content = document.getElementById('paymentHistoryContent');
+                
+                let html = '<table class="payment-history-table">';
+                html += `
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Monto</th>
+                        <th>Método</th>
+                        <th>Mes Abonado</th>
+                    </tr>`;
+
+                if (snapshot.exists()) {
+                    snapshot.forEach((childSnapshot) => {
+                        const payment = childSnapshot.val();
+                        html += `
+                            <tr>
+                                <td>${new Date(payment.fechaPago).toLocaleDateString()}</td>
+                                <td>$${payment.cuota}</td>
+                                <td>${payment.metodoPago.toUpperCase()}</td>
+                                <td>${payment.mesAnio}</td>
+                            </tr>`;
+                    });
+                } else {
+                    html += '<tr><td colspan="4">No hay historial de pagos</td></tr>';
+                }
+
+                html += '</table>';
+                content.innerHTML = html;
+                modal.style.display = 'block';
+            } catch (error) {
+                console.error('Error loading payment history:', error);
+                alert('Error al cargar el historial de pagos');
+            }
+        };
+
+        // Make closePaymentHistory available globally
+        window.closePaymentHistory = function() {
+            document.getElementById('paymentHistoryModal').style.display = 'none';
+        };
+
+        // Make resetAllPayments available globally
+        window.resetAllPayments = async function() {
+            if (confirm('¿Está seguro que desea resetear todos los pagos? Esto cambiará el estado de pago a "No Abonado" y limpiará las fechas de pago, pero mantendrá todos los demás datos de los alumnos.')) {
+                if (confirm('¿REALMENTE desea proceder? Esta acción afectará a todos los alumnos abonados.')) {
+                    try {
+                        const studentsRef = ref(db, 'students');
+                        const snapshot = await get(studentsRef);
+                        
+                        if (snapshot.exists()) {
+                            let updatePromises = [];
+                            
+                            snapshot.forEach((childSnapshot) => {
+                                const student = childSnapshot.val();
+                                // Solo resetear alumnos que estén abonados
+                                if (student.metodoPago !== 'no_abonado') {
+                                    const updatedStudent = {
+                                        ...student,
+                                        metodoPago: 'no_abonado',
+                                        fechaPago: null,
+                                        timestamp: Date.now()
+                                    };
+                                    
+                                    const studentRef = ref(db, `students/${childSnapshot.key}`);
+                                    updatePromises.push(set(studentRef, updatedStudent));
+                                }
+                            });
+                            
+                            await Promise.all(updatePromises);
+                            alert('Todos los pagos han sido reseteados correctamente. Los alumnos ahora aparecen como "No Abonados".');
+                            
+                            // Recargar la tabla
+                            location.reload();
+                        } else {
+                            alert('No hay alumnos registrados para resetear.');
+                        }
+                    } catch (error) {
+                        console.error('Error resetting payments:', error);
+                        alert('Error al resetear los pagos');
+                    }
+                }
+            }
+        };
+
+        // Make generateReceipt available globally
+        window.generateReceipt = async function(studentId) {
+            try {
+                const studentRef = ref(db, `students/${studentId}`);
+                const snapshot = await get(studentRef);
+                
+                if (snapshot.exists()) {
+                    const student = snapshot.val();
+                    showReceiptModal(student);
+                } else {
+                    alert('No se encontró la información del alumno');
+                }
+            } catch (error) {
+                console.error('Error loading student data:', error);
+                alert('Error al cargar los datos del alumno');
+            }
+        };
+
+        // Function to generate random 8-digit number
+        function generateReceiptNumber() {
+            return Math.floor(10000000 + Math.random() * 90000000).toString();
+        }
+
+        // Function to show receipt modal
+        window.showReceiptModal = function(student) {
+            const modal = document.getElementById('receiptModal');
+            const content = document.getElementById('receiptContent');
+            
+            const fechaPago = student.fechaPago ? 
+                new Date(student.fechaPago).toLocaleDateString('es-AR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }) : 'No registrado';
+
+            const fechaEmision = new Date().toLocaleDateString('es-AR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+
+            const receiptNumber = generateReceiptNumber();
+
+            const receiptHtml = `
+                <div class="receipt-container" id="receiptToPrint">
+                    <div class="receipt-header">
+                        <div class="receipt-logo-container">
+                            <img src="assets/febe_logo.png" alt="Logo Febe" class="receipt-logo">
+                        </div>
+                        <div class="receipt-title">
+                            <h1>COMPROBANTE DE PAGO</h1>
+                            <h2>Escuela de Padel Febe Ruiz</h2>
+                        </div>
+                    </div>
+                    
+                    <div class="receipt-info">
+                        <div class="receipt-section">
+                            <h3>DATOS DEL ALUMNO</h3>
+                            <p><strong>Nombre:</strong> ${student.nombre} ${student.apellido}</p>
+                        </div>
+                        
+                        <div class="receipt-section">
+                            <h3>DATOS DEL PAGO</h3>
+                            <p><strong>Método de Pago:</strong> ${student.metodoPago.toUpperCase()}</p>
+                            <p><strong>Cuota:</strong> $${student.cuota}</p>
+                            <p><strong>Fecha de Pago:</strong> ${fechaPago}</p>
+                            <p><strong>Mes Abonado:</strong> ${student.mesAnio}</p>
+                        </div>
+                        
+                        <div class="receipt-section">
+                            <h3>INFORMACIÓN ADICIONAL</h3>
+                            <p><strong>Fecha de Emisión:</strong> ${fechaEmision}</p>
+                            <p><strong>Número de Comprobante:</strong> ${receiptNumber}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="receipt-footer">
+                        <p>Este comprobante certifica que el pago ha sido realizado correctamente.</p>
+                        <p>Escuela de Padel Febe Ruiz - Todos los derechos reservados</p>
+                    </div>
+                </div>
+            `;
+            
+            content.innerHTML = receiptHtml;
+            modal.style.display = 'block';
+        };
+
+        // Function to close receipt modal
+        window.closeReceiptModal = function() {
+            document.getElementById('receiptModal').style.display = 'none';
+        };
+
+
+    </script>
+    <script src="js/theme.js"></script>
+    <script src="js/navigation.js"></script>
+
+    <div id="paymentHistoryModal" class="modal">
+        <div class="modal-content">
+            <h2>Historial de Pagos</h2>
+            <div id="paymentHistoryContent"></div>
+            <button class="btn-volver" onclick="closePaymentHistory()">Cerrar</button>
+        </div>
+    </div>
+</body>
+</html>
