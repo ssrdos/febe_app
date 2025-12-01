@@ -362,6 +362,26 @@ body {
     padding: 5px;
 }
 
+/* Grid específico para horarios - optimizado para más elementos */
+.checkbox-group.horario-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 8px;
+    padding: 5px;
+}
+
+/* Estilos específicos para labels de horarios */
+.horario-group .checkbox-label {
+    justify-content: center;
+    text-align: center;
+    padding: 10px 12px;
+    font-size: 13px;
+}
+
+.horario-group .checkbox-label input[type="checkbox"] {
+    margin-right: 6px;
+}
+
 /* Labels de checkboxes */
 .checkbox-label {
     display: flex;
@@ -1381,6 +1401,19 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
+/* Estilos para tablets y pantallas medianas */
+@media screen and (min-width: 481px) and (max-width: 768px) {
+    .checkbox-group.horario-grid {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 8px;
+    }
+    
+    .horario-group .checkbox-label {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}
+
 /* Responsive Design */
 @media screen and (max-width: 768px) {
     .theme-toggle {
@@ -1530,8 +1563,10 @@ body {
         gap: 0.5rem;
     }
     
+    /* Grid de horarios responsive */
     .checkbox-group.horario-grid {
-        grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
+        gap: 8px;
     }
     
     /* Responsive para horarios */
@@ -1631,9 +1666,29 @@ body {
         grid-template-columns: repeat(2, 1fr);
     }
     
+    /* Grid de horarios en móviles pequeños */
+    .checkbox-group.horario-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+    
     .checkbox-label {
         font-size: 14px;
         padding: 6px;
+    }
+    
+    /* Labels de horarios más compactos en móvil */
+    .horario-group .checkbox-label {
+        padding: 8px 6px;
+        font-size: 12px;
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .horario-group .checkbox-label input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        margin-right: 4px;
     }
     
     .form-input {
