@@ -24,13 +24,25 @@
         </nav>
     </div>
     <script src="js/theme.js"></script>
+    <script src="js/custom-alert.js"></script>
     <script src="js/navigation.js"></script>
-    <script>
-        function logout() {
-            if (confirm('¿Está seguro que desea cerrar sesión?')) {
-                window.location.href = 'index.html';
+    <script type="module">
+        import { checkAuth } from './js/auth.js';
+        import { logout } from './js/script-base.js';
+        
+        // Verificar autenticación al cargar la página
+        checkAuth();
+        
+        // Hacer logout disponible globalmente
+        window.logout = async function() {
+            const confirmed = await (window.customConfirm 
+                ? window.customConfirm('¿Está seguro que desea cerrar sesión?', 'Cerrar Sesión')
+                : Promise.resolve(confirm('¿Está seguro que desea cerrar sesión?')));
+            
+            if (confirmed) {
+                logout();
             }
-        }
+        };
     </script>
 </body>
 </html>

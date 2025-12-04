@@ -80,14 +80,47 @@
 
     <script type="module">
         import { db } from './js/firebase-config.js';
+        import { auth } from './js/firebase-config.js';
         import { ref, get, remove, set } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+        import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+        import { checkAuth } from './js/auth.js';
+
+        // Verificar autenticación antes de cargar datos
+        checkAuth();
 
         window.onload = async function() {
+            // Esperar a que el usuario esté autenticado antes de cargar datos
+            await new Promise((resolve) => {
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        resolve(user);
+                    } else {
+                        // Si no hay usuario, checkAuth ya redirigirá
+                        // Pero esperamos un poco para dar tiempo a la redirección
+                        setTimeout(() => resolve(null), 100);
+                    }
+                });
+            });
+            
+            // Si no hay usuario autenticado, no continuar
+            if (!auth.currentUser) {
+                console.log('Usuario no autenticado, esperando redirección...');
+                return;
+            }
             const studentsList = document.getElementById('studentsList');
             const searchInput = document.getElementById('searchInput');
             const paymentStatusFilter = document.getElementById('paymentStatusFilter');
             const studentDetail = document.getElementById('studentDetail');
             let students = [];
+            
+            // Verificar que los elementos existan
+            if (!studentsList) {
+                console.error('Error: No se encontró el elemento studentsList');
+                return;
+            }
+            
+            // Mostrar mensaje de carga
+            studentsList.innerHTML = '<p class="no-students">Cargando alumnos...</p>';
 
             // Function to render the table
             function renderTable(students) {
@@ -115,11 +148,14 @@
                             day: '2-digit'
                         }) : 'No registrado';
 
+                    // Safely format metodoPago
+                    const metodoPago = student.metodoPago ? String(student.metodoPago).toUpperCase() : 'NO ESPECIFICADO';
+                    
                     html += `
                         <tr>
-                            <td>${student.nombre}</td>
-                            <td>${student.apellido}</td>
-                            <td>${student.metodoPago.toUpperCase()}</td>
+                            <td>${student.nombre || 'No especificado'}</td>
+                            <td>${student.apellido || 'No especificado'}</td>
+                            <td>${metodoPago}</td>
                             <td>${fechaPago}</td>
                             <td>
                                 <button onclick="viewStudent(${index})" class="btn-view">VER</button>
@@ -135,6 +171,7 @@
             // Function to load students from Firebase
             async function loadStudents() {
                 try {
+                    console.log('Cargando alumnos desde Firebase...');
                     const studentsRef = ref(db, 'students');
                     const snapshot = await get(studentsRef);
                     let totalStudents = 0;
@@ -156,16 +193,52 @@
                                 paidStudents++;
                             }
                         });
+                        console.log(`Se cargaron ${totalStudents} alumnos`);
+                    } else {
+                        console.log('No hay alumnos en la base de datos');
+                        students = [];
                     }
 
                     // Update counters
-                    document.getElementById('totalCounter').textContent = totalStudents;
-                    document.getElementById('paidCounter').textContent = paidStudents;
-                    document.getElementById('unpaidCounter').textContent = unpaidStudents;
+                    const totalCounterEl = document.getElementById('totalCounter');
+                    const paidCounterEl = document.getElementById('paidCounter');
+                    const unpaidCounterEl = document.getElementById('unpaidCounter');
+                    
+                    if (totalCounterEl) totalCounterEl.textContent = totalStudents;
+                    if (paidCounterEl) paidCounterEl.textContent = paidStudents;
+                    if (unpaidCounterEl) unpaidCounterEl.textContent = unpaidStudents;
 
                     return students;
                 } catch (error) {
                     console.error('Error loading students:', error);
+                    console.error('Error details:', {
+                        code: error.code,
+                        message: error.message,
+                        stack: error.stack
+                    });
+                    
+                    // Verificar si es un error de permisos
+                    let errorMessage = 'Error al cargar los alumnos';
+                    if (error.code === 'PERMISSION_DENIED') {
+                        errorMessage = 'No tienes permiso para acceder a los datos. Por favor, verifica que estés autenticado correctamente.';
+                        console.error('Error de permisos - verificar reglas de Firebase y autenticación');
+                    } else if (error.message) {
+                        errorMessage = `Error al cargar los alumnos: ${error.message}`;
+                    }
+                    
+                    // Mostrar error al usuario
+                    if (window.customError) {
+                        await window.customError(errorMessage, 'Error');
+                    } else {
+                        alert(errorMessage);
+                    }
+                    
+                    // Mostrar mensaje en la página también
+                    const studentsListEl = document.getElementById('studentsList');
+                    if (studentsListEl) {
+                        studentsListEl.innerHTML = `<p class="no-students" style="color: #dc2626;">${errorMessage}</p>`;
+                    }
+                    
                     return [];
                 }
             }
@@ -203,11 +276,29 @@
 
             // Initialize and render students
             try {
+                console.log('Inicializando lista de alumnos...');
                 students = await loadStudents();
-                filterStudents(); // Use filterStudents instead of renderTable
+                console.log(`Total de alumnos cargados: ${students.length}`);
+                
+                if (students.length === 0) {
+                    studentsList.innerHTML = '<p class="no-students">No hay alumnos registrados</p>';
+                } else {
+                    filterStudents(); // Use filterStudents instead of renderTable
+                }
             } catch (error) {
                 console.error('Error initializing students:', error);
-                studentsList.innerHTML = '<p class="error">Error al cargar los alumnos</p>';
+                console.error('Error details:', error);
+                
+                let errorMessage = 'Error al cargar los alumnos';
+                if (error.message) {
+                    errorMessage += `: ${error.message}`;
+                }
+                
+                studentsList.innerHTML = `<p class="no-students" style="color: #dc2626;">${errorMessage}</p>`;
+                
+                if (window.customError) {
+                    await window.customError(errorMessage, 'Error');
+                }
             }
 
             // Update counters
@@ -216,9 +307,9 @@
                 const paidCounter = document.getElementById('paidCounter');
                 const unpaidCounter = document.getElementById('unpaidCounter');
 
-                totalCounter.innerText = students.length;
-                paidCounter.innerText = students.filter(s => s.metodoPago !== 'no_abonado').length;
-                unpaidCounter.innerText = students.filter(s => s.metodoPago === 'no_abonado').length;
+                if (totalCounter) totalCounter.innerText = students.length;
+                if (paidCounter) paidCounter.innerText = students.filter(s => s.metodoPago !== 'no_abonado').length;
+                if (unpaidCounter) unpaidCounter.innerText = students.filter(s => s.metodoPago === 'no_abonado').length;
             }
 
             // Search functionality
@@ -234,36 +325,74 @@
             });
 
             // Make functions available globally
-            window.viewStudent = function(index) {
+            window.viewStudent = async function(index) {
                 // Use the filtered array instead of the main array
                 const student = filteredStudents[index];
+                
+                if (!student) {
+                    if (window.customError) {
+                        await window.customError('Error: No se pudo encontrar la información del alumno', 'Error');
+                    } else {
+                        alert('Error: No se pudo encontrar la información del alumno');
+                    }
+                    console.error('Student not found at index:', index);
+                    return;
+                }
+                
                 studentsList.style.display = 'none';
                 studentDetail.style.display = 'block';
                 
+                // Helper function to safely format arrays
+                const formatArray = (field) => {
+                    if (!field) return 'No especificado';
+                    if (Array.isArray(field)) {
+                        return field.length > 0 ? field.join(', ') : 'No especificado';
+                    }
+                    return String(field);
+                };
+                
+                // Helper function to safely format date
+                const formatDate = (dateField) => {
+                    if (!dateField) return 'No registrado';
+                    try {
+                        const date = new Date(dateField);
+                        return date.toLocaleDateString('es-AR', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                        });
+                    } catch (e) {
+                        return 'Fecha inválida';
+                    }
+                };
+                
                 const detailHtml = `
                     <div class="detail-item">
-                        <strong>Nombre:</strong> ${student.nombre}
+                        <strong>Nombre:</strong> ${student.nombre || 'No especificado'}
                     </div>
                     <div class="detail-item">
-                        <strong>Apellido:</strong> ${student.apellido}
+                        <strong>Apellido:</strong> ${student.apellido || 'No especificado'}
                     </div>
                     <div class="detail-item">
-                        <strong>Días:</strong> ${student.dias.join(', ')}
+                        <strong>Días:</strong> ${formatArray(student.dias)}
                     </div>
                     <div class="detail-item">
-                        <strong>Turnos:</strong> ${student.turnos.join(', ')}
+                        <strong>Turnos:</strong> ${formatArray(student.turnos)}
                     </div>
                     <div class="detail-item">
-                        <strong>Horarios:</strong> ${student.horarios.join(', ')}
+                        <strong>Horarios:</strong> ${formatArray(student.horarios)}
                     </div>
                     <div class="detail-item">
-                        <strong>Cuota:</strong> $${student.cuota}
+                        <strong>Cuota:</strong> $${student.cuota || '0'}
                     </div>
                     <div class="detail-item">
-                        <strong>Mes/Año:</strong> ${student.mesAnio}
+                        <strong>Mes/Año:</strong> ${student.mesAnio || 'No especificado'}
                     </div>
                     <div class="detail-item">
-                        <strong>Método de Pago:</strong> ${student.metodoPago}
+                        <strong>Método de Pago:</strong> ${student.metodoPago ? student.metodoPago.toUpperCase() : 'No especificado'}
+                    </div>
+                    <div class="detail-item">
+                        <strong>Fecha de Pago:</strong> ${formatDate(student.fechaPago)}
                     </div>
                     <div class="detail-actions">
                         <button onclick="editStudent(${index})" class="btn-edit">Editar</button>
@@ -278,46 +407,78 @@
                 studentsList.style.display = 'block';
             };
 
-            window.editStudent = function(index) {
+            window.editStudent = async function(index) {
                 // Use the filtered array
                 const student = filteredStudents[index];
                 if (!student) {
                     console.error('Student not found');
+                    if (window.customError) {
+                        await window.customError('Error: No se pudo encontrar la información del alumno', 'Error');
+                    } else {
+                        alert('Error: No se pudo encontrar la información del alumno');
+                    }
                     return;
                 }
 
                 const detailContent = document.querySelector('.detail-content');
                 
+                // Helper function to safely format arrays for editing
+                const formatArrayForEdit = (field) => {
+                    if (!field) return '';
+                    if (Array.isArray(field)) {
+                        return field.join(', ');
+                    }
+                    return String(field);
+                };
+                
+                // Helper function to safely format date for input
+                const formatDateForInput = (dateField) => {
+                    if (!dateField) return '';
+                    try {
+                        // Handle both ISO string and timestamp formats
+                        let date;
+                        if (typeof dateField === 'number') {
+                            date = new Date(dateField);
+                        } else {
+                            date = new Date(dateField);
+                        }
+                        if (isNaN(date.getTime())) return '';
+                        return date.toISOString().slice(0, 10);
+                    } catch (e) {
+                        return '';
+                    }
+                };
+                
                 const editHtml = `
                     <div class="detail-item">
                         <strong>Nombre:</strong>
-                        <input type="text" class="detail-edit-input" value="${student.nombre}" id="edit-nombre">
+                        <input type="text" class="detail-edit-input" value="${student.nombre || ''}" id="edit-nombre">
                     </div>
                     <div class="detail-item">
                         <strong>Apellido:</strong>
-                        <input type="text" class="detail-edit-input" value="${student.apellido}" id="edit-apellido">
+                        <input type="text" class="detail-edit-input" value="${student.apellido || ''}" id="edit-apellido">
                     </div>
                     <div class="detail-item">
                         <strong>Días:</strong>
-                        <input type="text" class="detail-edit-input" value="${student.dias.join(', ')}" id="edit-dias">
+                        <input type="text" class="detail-edit-input" value="${formatArrayForEdit(student.dias)}" id="edit-dias">
                     </div>
                     <div class="detail-item">
                         <strong>Turnos:</strong>
-                        <input type="text" class="detail-edit-input" value="${student.turnos.join(', ')}" id="edit-turnos">
+                        <input type="text" class="detail-edit-input" value="${formatArrayForEdit(student.turnos)}" id="edit-turnos">
                     </div>
                     <div class="detail-item">
                         <strong>Horarios:</strong>
-                        <input type="text" class="detail-edit-input" value="${student.horarios.join(', ')}" id="edit-horarios">
+                        <input type="text" class="detail-edit-input" value="${formatArrayForEdit(student.horarios)}" id="edit-horarios">
                     </div>
                     <div class="detail-item">
                         <strong>Cuota:</strong>
-                        <input type="number" class="detail-edit-input" value="${student.cuota}" id="edit-cuota">
+                        <input type="number" class="detail-edit-input" value="${student.cuota || ''}" id="edit-cuota">
                     </div>
                     <div class="detail-item">
                         <strong>Fecha de Pago:</strong>
                         <input type="date" 
                                class="detail-edit-input" 
-                               value="${student.fechaPago ? student.fechaPago.slice(0, 10) : ''}" 
+                               value="${formatDateForInput(student.fechaPago)}" 
                                id="edit-fechaPago">
                     </div>
                     <div class="detail-item">
@@ -331,7 +492,7 @@
                     </div>
                     <div class="detail-actions">
                         <button onclick="saveChanges('${student.id}')" class="btn-save">Guardar</button>
-                        <button onclick="cancelEdit('${student.id}')" class="btn-volver">Cancelar</button>
+                        <button onclick="cancelEdit(${index})" class="btn-volver">Cancelar</button>
                     </div>`;
                 
                 detailContent.innerHTML = editHtml;
@@ -339,16 +500,44 @@
 
             // También actualiza la función saveChanges para usar el ID
             window.saveChanges = async function(studentId) {
+                // Get form values safely
+                const nombreValue = document.getElementById('edit-nombre')?.value || '';
+                const apellidoValue = document.getElementById('edit-apellido')?.value || '';
+                const diasValue = document.getElementById('edit-dias')?.value || '';
+                const turnosValue = document.getElementById('edit-turnos')?.value || '';
+                const horariosValue = document.getElementById('edit-horarios')?.value || '';
+                const cuotaValue = document.getElementById('edit-cuota')?.value || '';
+                const fechaPagoValue = document.getElementById('edit-fechaPago')?.value || '';
+                const metodoPagoValue = document.getElementById('edit-metodoPago')?.value || 'no_abonado';
+                
+                // Process arrays safely
+                const dias = diasValue ? diasValue.split(',').map(d => d.trim()).filter(d => d.length > 0) : [];
+                const turnos = turnosValue ? turnosValue.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
+                const horarios = horariosValue ? horariosValue.split(',').map(h => h.trim()).filter(h => h.length > 0) : [];
+                
+                // Calculate mesAnio safely
+                let mesAnio = '';
+                if (fechaPagoValue) {
+                    try {
+                        const fecha = new Date(fechaPagoValue);
+                        if (!isNaN(fecha.getTime())) {
+                            mesAnio = fecha.toISOString().slice(0, 7);
+                        }
+                    } catch (e) {
+                        console.error('Error parsing date:', e);
+                    }
+                }
+                
                 const student = {
-                    nombre: document.getElementById('edit-nombre').value,
-                    apellido: document.getElementById('edit-apellido').value,
-                    dias: document.getElementById('edit-dias').value.split(',').map(d => d.trim()),
-                    turnos: document.getElementById('edit-turnos').value.split(',').map(t => t.trim()),
-                    horarios: document.getElementById('edit-horarios').value.split(',').map(h => h.trim()),
-                    cuota: document.getElementById('edit-cuota').value,
-                    fechaPago: document.getElementById('edit-fechaPago').value,
-                    mesAnio: new Date(document.getElementById('edit-fechaPago').value).toISOString().slice(0,7),
-                    metodoPago: document.getElementById('edit-metodoPago').value,
+                    nombre: nombreValue,
+                    apellido: apellidoValue,
+                    dias: dias,
+                    turnos: turnos,
+                    horarios: horarios,
+                    cuota: cuotaValue || '0',
+                    fechaPago: fechaPagoValue || null,
+                    mesAnio: mesAnio,
+                    metodoPago: metodoPagoValue,
                     timestamp: Date.now()
                 };
 
@@ -360,10 +549,21 @@
                     const index = filteredStudents.findIndex(s => s.id === studentId);
                     if (index !== -1) {
                         viewStudent(index);
+                    } else {
+                        closeDetail();
+                    }
+                    if (window.customSuccess) {
+                        await window.customSuccess('Cambios guardados correctamente', 'Éxito');
+                    } else {
+                        alert('Cambios guardados correctamente');
                     }
                 } catch (error) {
                     console.error('Error saving changes:', error);
-                    alert('Error al guardar los cambios');
+                    if (window.customError) {
+                        await window.customError('Error al guardar los cambios', 'Error');
+                    } else {
+                        alert('Error al guardar los cambios');
+                    }
                 }
             };
 
@@ -372,7 +572,11 @@
             };
 
             window.deleteStudent = async function(index) {
-                if (confirm('¿Está seguro que desea eliminar este alumno?')) {
+                const confirmed = window.customConfirm 
+                    ? await window.customConfirm('¿Está seguro que desea eliminar este alumno?', 'Eliminar Alumno')
+                    : confirm('¿Está seguro que desea eliminar este alumno?');
+                
+                if (confirmed) {
                     // Use the filtered array
                     const student = filteredStudents[index];
                     try {
@@ -381,29 +585,49 @@
                         filteredStudents = [...students]; // Update filtered array
                         closeDetail();
                         filterStudents(); // Use filterStudents instead of renderTable
-                        alert('Alumno eliminado correctamente');
+                        if (window.customSuccess) {
+                            await window.customSuccess('Alumno eliminado correctamente', 'Éxito');
+                        } else {
+                            alert('Alumno eliminado correctamente');
+                        }
                     } catch (error) {
                         console.error('Error deleting student:', error);
-                        alert('Error al eliminar el alumno');
+                        if (window.customError) {
+                            await window.customError('Error al eliminar el alumno', 'Error');
+                        } else {
+                            alert('Error al eliminar el alumno');
+                        }
                     }
                 }
             };
 
             window.deleteAllStudents = async function() {
-                if (confirm('¿Está seguro que desea eliminar todos los alumnos?')) {
+                const confirmed = window.customConfirm 
+                    ? await window.customConfirm('¿Está seguro que desea eliminar todos los alumnos? Esta acción no se puede deshacer.', 'Eliminar Todos')
+                    : confirm('¿Está seguro que desea eliminar todos los alumnos?');
+                
+                if (confirmed) {
                     try {
                         await remove(ref(db, 'students'));
                         students = [];
                         renderTable(students);
-                        alert('Todos los alumnos han sido eliminados correctamente');
+                        if (window.customSuccess) {
+                            await window.customSuccess('Todos los alumnos han sido eliminados correctamente', 'Éxito');
+                        } else {
+                            alert('Todos los alumnos han sido eliminados correctamente');
+                        }
                     } catch (error) {
                         console.error('Error deleting all students:', error);
-                        alert('Error al eliminar todos los alumnos');
+                        if (window.customError) {
+                            await window.customError('Error al eliminar todos los alumnos', 'Error');
+                        } else {
+                            alert('Error al eliminar todos los alumnos');
+                        }
                     }
                 }
             };
 
-            window.exportToExcel = function() {
+            window.exportToExcel = async function() {
                 try {
                     // Create worksheet data with updated headers
                     const wsData = [
@@ -412,21 +636,39 @@
 
                     students.forEach(student => {
                         // Format the payment date for Excel
-                        const fechaPago = student.fechaPago ? 
-                            new Date(student.fechaPago).toLocaleDateString('es-AR', {
-                                year: 'numeric',
-                                month: '2-digit',
-                                day: '2-digit'
-                            }) : 'No registrado';
+                        let fechaPago = 'No registrado';
+                        if (student.fechaPago) {
+                            try {
+                                const date = new Date(student.fechaPago);
+                                if (!isNaN(date.getTime())) {
+                                    fechaPago = date.toLocaleDateString('es-AR', {
+                                        year: 'numeric',
+                                        month: '2-digit',
+                                        day: '2-digit'
+                                    });
+                                }
+                            } catch (e) {
+                                fechaPago = 'Fecha inválida';
+                            }
+                        }
+
+                        // Safely format arrays
+                        const formatArrayField = (field) => {
+                            if (!field) return '';
+                            if (Array.isArray(field)) {
+                                return field.length > 0 ? field.join(', ') : '';
+                            }
+                            return String(field);
+                        };
 
                         wsData.push([
-                            student.nombre,
-                            student.apellido,
-                            Array.isArray(student.dias) ? student.dias.join(', ') : student.dias,
-                            Array.isArray(student.turnos) ? student.turnos.join(', ') : student.turnos,
-                            Array.isArray(student.horarios) ? student.horarios.join(', ') : student.horarios,
-                            student.cuota,
-                            student.metodoPago.toUpperCase(),
+                            student.nombre || '',
+                            student.apellido || '',
+                            formatArrayField(student.dias),
+                            formatArrayField(student.turnos),
+                            formatArrayField(student.horarios),
+                            student.cuota || '0',
+                            student.metodoPago ? String(student.metodoPago).toUpperCase() : 'NO ESPECIFICADO',
                             fechaPago
                         ]);
                     });
@@ -459,11 +701,17 @@
                     XLSX.writeFile(wb, fileName);
                 } catch (error) {
                     console.error('Error exporting to Excel:', error);
-                    alert('Error al exportar a Excel');
+                    if (window.customError) {
+                        await window.customError('Error al exportar a Excel', 'Error');
+                    } else {
+                        alert('Error al exportar a Excel');
+                    }
                 }
             };
         }
     </script>
+    <script src="js/custom-alert.js"></script>
+    <script src="js/alert-helpers.js"></script>
     <script type="module" src="js/theme.js"></script>
     <script src="js/navigation.js"></script>
 </body>

@@ -59,6 +59,10 @@
                 <span class="counter-number" id="paidCounter">0</span>
                 <span class="counter-label">Alumnos Abonados</span>
             </div>
+            <div class="counter-item">
+                <span class="counter-number" id="totalpaid">0</span>
+                <span class="counter-label">Monto total</span>
+            </div>
         </div>
 
         <div id="paidStudentsList" class="students-list">
@@ -156,6 +160,12 @@
                     paidStudentsList.innerHTML = '<p class="no-students">No hay alumnos abonados</p>';
                     return;
                 }
+
+                let totalAmount = 0;
+                students.forEach(student => {
+                    totalAmount += Number(student.cuota) || 0;
+                });
+                document.getElementById('totalpaid').textContent = `$${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;   
 
                 let html = '<table class="students-table">';
                 html += `
@@ -385,6 +395,8 @@
 
 
     </script>
+    <script src="js/custom-alert.js"></script>
+    <script src="js/alert-helpers.js"></script>
     <script src="js/theme.js"></script>
     <script src="js/navigation.js"></script>
 
