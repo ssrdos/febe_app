@@ -1,6 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
 import { getDatabase } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+import { getAuth } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -17,8 +18,6 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
 
-// Remove App Check for now since it's causing issues
-// We'll implement proper authentication later
-
-export { db };
+export { db, auth };
